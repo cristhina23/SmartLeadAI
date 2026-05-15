@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartLeadAI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f8462e81f056797d68bba2d1cb4482d09743719d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+727621e0e20f14261aabb6dcb22ab49ab0dcbead")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartLeadAI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartLeadAI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

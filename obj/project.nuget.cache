@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "HcKNQjguXp8=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\lenovo\\Desktop\\cristhina\\BYU\\TERM-9\\CSE-325\\SmartLeadAI\\SmartLeadAI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\lenovo\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.8\\microsoft.aspnetcore.app.internal.assets.10.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -3,6 +3,7 @@
 AI-powered lead management and customer automation platform built with .NET Blazor.
 
 ## Features
+
 - Authentication
 - Lead Management CRUD
 - AI-generated responses
@@ -10,4 +11,7 @@ AI-powered lead management and customer automation platform built with .NET Blaz
 - Cloud deployment
 
 ## Team Members
+
 - Viszelle Chacon
+- Julyanne Lee
+- Fernando Antonio Caballero Cruz

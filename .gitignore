@@ -1,0 +1,14 @@
+# Build folders
+**/bin/
+**/obj/
+
+# Local history
+.history/
+
+# Editor folders
+.vscode/
+.idea/
+
+# User-specific
+*.user
+*.suo

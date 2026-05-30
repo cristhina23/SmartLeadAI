@@ -1,34 +1,28 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 public class Company
 {
-    [Required]
     [Key]
-    
     public int Id { get; set; }
 
     [Required]
     [StringLength(255)]
-    public string? Name { get; set; }
-
+    public string Name { get; set; } = string.Empty;
 
     [Required]
     [Phone]
-    
-    public string? PhoneNumber { get; set; }
-
+    public string Phone { get; set; } = string.Empty;
 
     [Required]
     [EmailAddress]
-    
-    public string? Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     [Required]
-    public int OwnerUserId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    
-    [Required]
-    [DataType(DataType.DateTime)]
-    
-    public string? CreatedAt { get; set; }
+    // Navigation Properties
+    public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<Customer> Customers { get; set; } = new List<Customer>();
 }

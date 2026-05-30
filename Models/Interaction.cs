@@ -1,8 +1,8 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 public class Interaction
 {
-    [Required]
     [Key]
     public int Id { get; set; }
 
@@ -10,22 +10,21 @@ public class Interaction
     public int CustomerId { get; set; }
 
     [Required]
-    [StringLength(255)]
-    public string? EmployeeName { get; set; }
+    public int UserId { get; set; } 
 
     [Required]
     [StringLength(100)]
-    public string? Type { get; set; }
+    public string Type { get; set; } = string.Empty;
 
-    [Required]
     [StringLength(1000)]
-    public string? Notes { get; set; }
+    public string Notes { get; set; } = string.Empty;
 
     [Required]
-    [DataType(DataType.DateTime)]
-    public string? InteractionDate { get; set; }
+    public DateTime InteractionDate { get; set; } = DateTime.UtcNow;
 
-    [Required]
-    [DataType(DataType.DateTime)]
-    public string? NextFollowUp { get; set; }
+    public DateTime? NextFollowUp { get; set; }
+
+    // Navigation Properties
+    public Customer Customer { get; set; } = null!;
+    public User User { get; set; } = null!;
 }

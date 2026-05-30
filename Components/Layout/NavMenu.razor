@@ -1,30 +1,36 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">SmartLeadAI</a>
+        <a class="navbar-brand" href="">Smart Lead AI</a>
     </div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
+    <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
             </NavLink>
         </div>
-
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="customers">
+                <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Customers
             </NavLink>
         </div>
-
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="employees">
+                <span class="bi bi-person-badge-fill-nav-menu" aria-hidden="true"></span> Employees
             </NavLink>
         </div>
     </nav>
 </div>
 
+@* TODO: Extract CSS to external file (if needed) *@
+<style>
+    /* Scoped styling to override default Blazor nav styles with our theme */
+    .navbar-brand { color: var(--clr-white); font-weight: 700; font-family: var(--font-primary); }
+    .nav-link { color: var(--clr-light); padding: 0.75rem 1rem; border-radius: 4px; transition: background-color 0.2s; }
+    .nav-link:hover { background-color: var(--clr-slate); color: var(--clr-white); }
+    .nav-link.active { background-color: var(--clr-navy); color: var(--clr-white); border-left: 4px solid var(--clr-slate-light); }
+</style>

@@ -1,0 +1,54 @@
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@currentUser" OnValidSubmit="HandleValidSubmit" FormName="CreateUserForm">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    
+    <div>
+        <label class="required-label">Full Name</label>
+        <InputText @bind-Value="currentUser.FullName" class="form-control" />
+        <ValidationMessage For="() => currentUser.FullName" />
+    </div>
+
+    <div>
+        <label class="required-label">Email</label>
+        <InputText @bind-Value="currentUser.Email" class="form-control" />
+        <ValidationMessage For="() => currentUser.Email" />
+    </div>
+
+    <div>
+        <label class="required-label">Password</label>
+        <InputText type="password" @bind-Value="currentUser.PasswordHash" class="form-control" />
+        <ValidationMessage For="() => currentUser.PasswordHash" />
+    </div>
+
+    <div>
+        <label class="required-label">Company Id</label>
+        <InputNumber @bind-Value="currentUser.CompanyId" class="form-control" />
+        <ValidationMessage For="() => currentUser.CompanyId" />
+    </div>
+
+    <div>
+        <label class="required-label">Role</label>
+        <InputSelect @bind-Value="currentUser.Role" class="form-control">
+            <option value="">-- Select Role --</option>
+            <option value="Employee">Employee</option>
+            <option value="Manager">Manager</option>
+            <option value="Agent">Agent</option>
+            <option value="Admin">Admin</option>
+        </InputSelect>
+        <ValidationMessage For="() => currentUser.Role" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Create User</button>
+</EditForm>
+
+@code {
+    private User currentUser = new User();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine($"Saving data for: {currentUser.FullName}");
+        NavigationManager.NavigateTo("/");
+    }
+}

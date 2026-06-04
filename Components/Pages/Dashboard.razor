@@ -1,0 +1,72 @@
+@page "/"
+
+<PageTitle>Dashboard - Smart Lead AI</PageTitle>
+
+<div class="dashboard-header">
+    <h1>Dashboard</h1>
+    @* TODO: AI integration - AI smart reminders component here *@
+    </div>
+
+<div class="stats-grid">
+    <div class="crm-card stat-card">
+        <h3>Total Customers</h3>
+        @* TODO: Backend integration - Fetch total customers from db *@
+        <p class="stat-number">124</p>
+    </div>
+    <div class="crm-card stat-card">
+        <h3>Active Follow-ups</h3>
+        @* TODO: Backend integration - Fetch active follow-ups from future NextFollowUp in db *@
+        <p class="stat-number">12</p>
+    </div>
+    <div class="crm-card stat-card">
+        <h3>Recent Interactions</h3>
+        @* TODO: Backend integration - Fetch recent interactions (Between a range of days) *@
+        <p class="stat-number">45</p>
+    </div>
+</div>
+
+<div class="dashboard-sections mt-4">
+    <div class="crm-card">
+        <h2>Recent Activity</h2>
+        @* TODO: Backend integration - Replace with a foreach loop for Interactions list *@
+        <p class="text-muted">Loading placeholder...</p>
+        </div>
+
+    <div class="crm-card mt-4">
+        <h2>Upcoming Follow-ups</h2>
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @* TODO: Backend integration - Replace with a foreach loop for NextFollowUp that's > DateTime.Now *@
+                <tr>
+                    @* TODO: Data binding
+                    - Customer FullName
+                    - NextFollowUp date
+                    - Follow-up Type like Email, Phone, WhatsApp *@
+                    <td>John Doe</td>
+                    <td>Oct 24, 2026</td>
+                    <td>WhatsApp</td>
+                    <td>
+                        @* TODO: Button routing to view full past interaction details *@
+                        <button class="btn-primary">View</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* TODO: Extract CSS to external file (if needed) *@
+<style>
+    .dashboard-header { margin-bottom: 2rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--clr-slate); margin: 0; }
+    .mt-4 { margin-top: 1.5rem; }
+    .text-muted { color: var(--clr-slate-light); }
+</style>

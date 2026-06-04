@@ -1,0 +1,63 @@
+@page "/customers"
+
+<PageTitle>Customers - Smart Lead AI</PageTitle>
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1>Customers</h1>
+    @* TODO: Routing - Wire to a modal or navigate to new "customers/add" page  *@
+    <button class="btn-primary">+ Add New Customer</button>
+</div>
+
+<div class="search-bar mt-4 mb-4">
+    @* TODO: Backend integration - Bind input to search variable to filter through db query on either change/submit *@
+    <input type="text" placeholder="Search customers by name or email..." class="form-control crm-input" disabled />
+</div>
+
+<div class="crm-card">
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Interest Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* TODO: Backend integration - Populate customer rows with foreach loop *@
+            <tr>
+                @* TODO: Data binding
+                - Customer FullName
+                - Email
+                - Phone
+                - InterestType *@
+                <td>Jane Smith</td>
+                <td>jane@example.com</td>
+                <td>555-0192</td>
+                <td>Buying</td>
+                <td>
+                    @* TODO: Logic - Dynamic css based on @customer.Status *@
+                    <span class="badge badge-active">Active</span>
+                </td>
+                <td>
+                    @* TODO: Routing - Wire to a modal or navigate to customer details at customers/details/@customer.Id page *@
+                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Details</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@* TODO: UI states (for final polish)
+- Empty state if there are 0 customers
+- Loading spinner when fetching data *@
+
+@* TODO: Extract CSS to external file (if needed) *@
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .crm-input { width: 100%; padding: 0.75rem; border: 1px solid var(--clr-light); border-radius: 4px; }
+    .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+    .badge-active { background-color: var(--clr-slate); color: var(--clr-white); }
+</style>

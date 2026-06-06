@@ -1,4 +1,8 @@
+@using Microsoft.AspNetCore.Authorization;
+
 @page "/employees"
+@attribute [Authorize(Roles = "Admin")]
+ @* Restricts this endpoint solely to Administrative accounts *@
 
 <PageTitle>Employees - Smart Lead AI</PageTitle>
 

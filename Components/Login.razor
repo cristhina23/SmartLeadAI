@@ -1,0 +1,125 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthService AuthService
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow-lg border-0 rounded-3 p-4" style="width: 100%; max-width: 420px;">
+        
+        <!-- Branding Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary">SmartLeadAI</h2>
+            <p class="text-muted">Sign in to manage your pipeline</p>
+        </div>
+
+        <!-- Error Feedback Area -->
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>@_errorMessage</div>
+            </div>
+        }
+
+        <!-- Edit Form -->
+        <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+            <DataAnnotationsValidator />
+
+            <!-- Email Field -->
+            <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                    <InputText id="email" 
+                               class="form-control" 
+                               placeholder="name@company.com" 
+                               @bind-Value="_loginModel.Email" 
+                               autocomplete="username" />
+                </div>
+                <ValidationMessage For="@(() => _loginModel.Email)" class="text-danger small mt-1" />
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <a href="/forgot-password" class="text-decoration-none small">Forgot password?</a>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                    <InputText id="password" 
+                               type="password" 
+                               class="form-control" 
+                               placeholder="••••••••" 
+                               @bind-Value="_loginModel.Password" 
+                               autocomplete="current-password" />
+                </div>
+                <ValidationMessage For="@(() => _loginModel.Password)" class="text-danger small mt-1" />
+            </div>
+
+            <!-- Remember Me Checkbox -->
+            <div class="mb-4 form-check">
+                <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="_loginModel.RememberMe" />
+                <label class="form-check-label text-muted small" for="rememberMe">
+                    Keep me signed in on this device
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" disabled="@_isSubmitting">
+                @if (_isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                    <span>Sign In</span>
+                }
+            </button>
+        </EditForm>
+
+    </div>
+</div>
+
+@code {
+    private LoginModel _loginModel = new();
+    private string? _errorMessage;
+    private bool _isSubmitting;
+
+    private async Task HandleLogin()
+    {
+        _isSubmitting = true;
+        _errorMessage = null;
+
+        try
+        {
+            // 1. Fetch user from database using your database context via AuthService
+            var user = await AuthService.GetUserByEmailAsync(_loginModel.Email);
+
+            // 2. Validate password securely
+            if (user == null || !AuthService.VerifyPassword(user, _loginModel.Password))
+            {
+                // Security Pro-Tip: Generic error message prevents username enumeration
+                _errorMessage = "Invalid email or password combination.";
+                return;
+            }
+
+            // 3. Notify the Blazor App state that the user is officially tracked
+            var customProvider = (CustomAuthStateProvider)AuthStateProvider;
+            customProvider.MarkUserAsAuthenticated(user);
+
+            // 4. Send them to the main secure workspace
+            NavManager.NavigateTo("/dashboard");
+        }
+        catch (Exception)
+        {
+            _errorMessage = "An unexpected error occurred. Please try again later.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

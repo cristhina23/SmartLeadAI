@@ -1,10 +1,26 @@
 using SmartLeadAI.Components;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Components.Authorization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// 1. Register Core Security Architecture 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "CustomAuth";
+    options.DefaultChallengeScheme = "CustomAuth";
+})
+.AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>("CustomAuth", options => { });
+
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 

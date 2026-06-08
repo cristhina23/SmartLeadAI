@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
+namespace SmartLeadAI.Models;
+
 public class Interaction
 {
     [Key]
@@ -10,7 +12,7 @@ public class Interaction
     public int CustomerId { get; set; }
 
     [Required]
-    public int UserId { get; set; } 
+    public int UserId { get; set; }
 
     [Required]
     [StringLength(100)]

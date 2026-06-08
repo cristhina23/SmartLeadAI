@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
+namespace SmartLeadAI.Models;
+
 public class User
 {
     [Key]
@@ -19,10 +21,10 @@ public class User
 
     [Required]
     [StringLength(255, MinimumLength = 8)]
-    public string PasswordHash { get; set; } = string.Empty; 
+    public string PasswordHash { get; set; } = string.Empty;
 
     [Required]
-    public string Role { get; set; } = "Employee"; 
+    public string Role { get; set; } = "Employee";
 
     [Required]
     public bool IsActive { get; set; } = true;

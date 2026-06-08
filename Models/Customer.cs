@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
+namespace SmartLeadAI.Models;
+
 public class Customer
 {
     [Key]
     public int Id { get; set; }
 
     [Required]
-    public int CompanyId { get; set; } 
+    public int CompanyId { get; set; }
 
     [Required]
     [StringLength(255)]

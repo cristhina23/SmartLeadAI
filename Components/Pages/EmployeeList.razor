@@ -1,4 +1,5 @@
 @page "/employees"
+@rendermode InteractiveServer
 
 <PageTitle>Employees - Smart Lead AI</PageTitle>
 
@@ -20,45 +21,73 @@
             </tr>
         </thead>
         <tbody>
-            @* TODO: Backend integration - Populate employee rows with foreach loop *@
-            <tr>
-                @* TODO: Data binding
-                - Employee FullName
-                - Email
-                - Role  *@
-                <td>Alex Johnson</td>
-                <td>alex@smartlead.com</td>
-                <td>Employee</td>
-                <td>
-                    @* TODO: Logic - Dynamic css based on employee.IsActive *@
-                    <span class="badge badge-active">Active</span>
-                </td>
-                <td>
-                    @* TODO: Routing - Write to a modal or details page at employees/details/@employee.Id *@
-                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Edit</button>
-                </td>
-            </tr>
-            @* Below is additional placeholder data to delete *@
-            <tr>
-                <td>Admin User</td>
-                <td>admin@smartlead.com</td>
-                <td>Admin</td>
-                <td>
-                    <span class="badge badge-active">Active</span>
-                </td>
-                <td>
-                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Edit</button>
-                </td>
-            </tr>
+            @if (employees == null || !employees.Any())
+            {
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: #778DA9;">No employees found.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var employee in employees)
+                {
+                    <tr>
+                        <td>@employee.FullName</td>
+                        <td>@employee.Email</td>
+                        <td>@employee.Role</td>
+                        <td>
+                            <span class="badge @(employee.IsActive ? "badge-active" : "badge-inactive")">
+                                @(employee.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-primary" style="background-color: var(--clr-slate-light);" @onclick="() => OpenEditModal(employee)">Edit</button>
+                        </td>
+                    </tr>
+                }
+            }
         </tbody>
     </table>
 </div>
 
-@* TODO: UI states (for final polish)
-- Empty state if there are 0 employees
-- Loading spinner when fetching data *@
+<EditEmployeeModal @bind-IsVisible="isEditModalVisible" />
 
-@* TODO: Extract CSS to external file (if needed) *@
+@code {
+    private bool isEditModalVisible = false;
+    
+    private User selectedEmployee = new();
+
+    private List<User> employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        @* TODO: Backend Integration - Fetch actual data from the database using EF Core
+            Example...
+            - employees = await DbContext.Users.Where(u => u.CompanyId == CurrentCompanyId).ToListAsync(); *@
+
+        @* === MOCK DATA FOR UI TESTING === *@
+        await Task.Delay(200); // network latency simulation
+
+        employees = new List<User>
+        {
+            new User { Id = 1, CompanyId = 1, FullName = "Alex Johnson", Email = "alex@smartlead.com", Role = "Employee", IsActive = true },
+            new User { Id = 2, CompanyId = 1, FullName = "Admin User", Email = "admin@smartlead.com", Role = "Admin", IsActive = true },
+            new User { Id = 3, CompanyId = 1, FullName = "Elena Rostova", Email = "elena@smartlead.com", Role = "Employee", IsActive = false }
+        };
+    }
+
+    private void OpenEditModal(User employee)
+    {
+        selectedEmployee = employee;
+        isEditModalVisible = true;
+        
+        @* TODO: Pass 'selectedEmployee' into the EditEmployeeModal as a Parameter with real data *@
+    }
+}
+
+@* TODO: Extract CSS to external file (if needed)
+    Note: Need to work on dynamic viewing for mobile view/smaller width.
+    - Change table to a different layout *@
 <style>
     .page-header { display: flex; justify-content: space-between; align-items: center; }
     .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }

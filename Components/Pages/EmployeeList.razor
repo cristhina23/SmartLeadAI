@@ -1,0 +1,67 @@
+@page "/employees"
+
+<PageTitle>Employees - Smart Lead AI</PageTitle>
+
+<div class="page-header">
+    <h1>Employee Management</h1>
+    @* TODO: Routing - Wire to a modal or navigate to employees/add page *@
+    <button class="btn-primary">+ Add Employee</button>
+</div>
+
+<div class="crm-card mt-4">
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* TODO: Backend integration - Populate employee rows with foreach loop *@
+            <tr>
+                @* TODO: Data binding
+                - Employee FullName
+                - Email
+                - Role  *@
+                <td>Alex Johnson</td>
+                <td>alex@smartlead.com</td>
+                <td>Employee</td>
+                <td>
+                    @* TODO: Logic - Dynamic css based on employee.IsActive *@
+                    <span class="badge badge-active">Active</span>
+                </td>
+                <td>
+                    @* TODO: Routing - Write to a modal or details page at employees/details/@employee.Id *@
+                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Edit</button>
+                </td>
+            </tr>
+            @* Below is additional placeholder data to delete *@
+            <tr>
+                <td>Admin User</td>
+                <td>admin@smartlead.com</td>
+                <td>Admin</td>
+                <td>
+                    <span class="badge badge-active">Active</span>
+                </td>
+                <td>
+                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Edit</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@* TODO: UI states (for final polish)
+- Empty state if there are 0 employees
+- Loading spinner when fetching data *@
+
+@* TODO: Extract CSS to external file (if needed) *@
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; }
+    .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+    .badge-active { background-color: var(--clr-slate); color: var(--clr-white); }
+    .mt-4 { margin-top: 1.5rem; }
+</style>

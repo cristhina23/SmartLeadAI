@@ -8,20 +8,20 @@ public class Interaction
     [Key]
     public int Id { get; set; }
 
-    [Required]
+    [Required (ErrorMessage = "Customer ID is required.")]
     public int CustomerId { get; set; }
 
-    [Required]
-    public int UserId { get; set; }
+    [Required (ErrorMessage = "User ID is required.")]
+    public int UserId { get; set; } 
 
-    [Required]
-    [StringLength(100)]
+    [Required (ErrorMessage = "Interaction type is required.")]
+    [StringLength(100, ErrorMessage = "Interaction type cannot exceed 100 characters.")]
     public string Type { get; set; } = string.Empty;
 
-    [StringLength(1000)]
+    [StringLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters.")]
     public string Notes { get; set; } = string.Empty;
 
-    [Required]
+    [Required (ErrorMessage = "Interaction date is required.")]
     public DateTime InteractionDate { get; set; } = DateTime.UtcNow;
 
     public DateTime? NextFollowUp { get; set; }

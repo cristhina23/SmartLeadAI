@@ -1,0 +1,60 @@
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@currentInteraction" OnValidSubmit="HandleValidSubmit" FormName="CreateInteractionForm">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    
+    
+
+    <div class="required-label">
+        <label>Type</label>
+        <InputText @bind-Value="currentInteraction.Type" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.Type" />
+    </div>
+
+    
+
+    <div class="required-label">
+        <label>Customer Id</label>
+        <InputNumber @bind-Value="currentInteraction.CustomerId" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.CustomerId" />
+    </div>
+
+    <div>
+        <label class="required-label">User Id</label>
+        <InputNumber @bind-Value="currentInteraction.UserId" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.UserId" />
+    </div>
+
+    <div>
+        <label>Notes</label>
+        <InputText @bind-Value="currentInteraction.Notes" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.Notes" />
+    </div>
+
+    <div>
+        <label class="required-label">Interaction Date</label>
+        <InputDate @bind-Value="currentInteraction.InteractionDate" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.InteractionDate" />
+    </div>
+
+    <div>
+        <label>Next Follow Up</label>
+        <InputDate @bind-Value="currentInteraction.NextFollowUp" class="form-control" />
+        <ValidationMessage For="() => currentInteraction.NextFollowUp" />
+    </div>
+
+    
+
+    <button type="submit" class="btn btn-primary mt-3">Create Interaction</button>
+</EditForm>
+
+@code {
+    private Interaction currentInteraction = new Interaction();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine($"Saving data for Interaction created at: {DateTime.Now}");
+        NavigationManager.NavigateTo("/");
+    }
+}       

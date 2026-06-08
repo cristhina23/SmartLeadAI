@@ -1,0 +1,53 @@
+@using Microsoft.AspNetCore.Components.Forms;
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@currentCustomer" OnValidSubmit="HandleValidSubmit" FormName="CreateCustomerForm">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    
+    <div>
+        <label class="required-label">Full Name</label>
+        <InputText @bind-Value="currentCustomer.FullName" class="form-control" />
+        <ValidationMessage For="() => currentCustomer.FullName" />
+    </div>
+
+    <div>
+        <label class="required-label">Email</label>
+        <InputText @bind-Value="currentCustomer.Email" class="form-control" />
+        <ValidationMessage For="() => currentCustomer.Email" />
+    </div>
+
+    <div class="required-label">
+        <label>Interest Type</label>
+        <InputText @bind-Value="currentCustomer.InterestType" class="form-control" />
+        <ValidationMessage For="() => currentCustomer.InterestType" />
+    </div>
+
+    <div>
+        <label>Notes</label>
+        <InputText @bind-Value="currentCustomer.Notes" class="form-control" />
+        <ValidationMessage For="() => currentCustomer.Notes" />
+    </div>
+
+    
+
+    <div>
+        <label class="required-label">Company Id</label>
+        <InputNumber @bind-Value="currentCustomer.CompanyId" class="form-control" />
+        <ValidationMessage For="() => currentCustomer.CompanyId" />
+    </div>
+
+    
+
+    <button type="submit" class="btn btn-primary mt-3">Create Customer</button>
+</EditForm>
+
+@code {
+    private Customer currentCustomer = new Customer();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine($"Saving data for: {currentCustomer.FullName}");
+        NavigationManager.NavigateTo("/");
+    }
+}

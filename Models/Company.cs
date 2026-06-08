@@ -7,19 +7,19 @@ public class Company
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    [StringLength(255)]
+    [Required (ErrorMessage = "Company name is required.")]
+    [StringLength(255, ErrorMessage = "Company name cannot exceed 255 characters.")]
     public string Name { get; set; } = string.Empty;
 
-    [Required]
-    [Phone]
+    [Required (ErrorMessage = "Phone number is required.")]
+    [Phone (ErrorMessage = "Invalid phone number format.")]
     public string Phone { get; set; } = string.Empty;
 
-    [Required]
-    [EmailAddress]
+    [Required (ErrorMessage = "Email is required.")]
+    [EmailAddress (ErrorMessage = "Invalid email format.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required (ErrorMessage = "Creation date is required.")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation Properties

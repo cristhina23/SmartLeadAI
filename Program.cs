@@ -32,7 +32,6 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri(sp.GetRequiredService<NavigationManager>().BaseUri)
 });
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
@@ -51,7 +50,7 @@ app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/signin", async (LoginModel login, AuthService authService, IHttpContextAccessor httpContextAccessor) =>
+app.MapPost("/signin", async ([Microsoft.AspNetCore.Mvc.FromForm] LoginModel login, AuthService authService, IHttpContextAccessor httpContextAccessor) =>
 {
     var user = await authService.GetUserByEmailAsync(login.Email);
     if (user == null || !authService.VerifyPassword(user, login.Password))
@@ -83,11 +82,15 @@ app.MapPost("/signin", async (LoginModel login, AuthService authService, IHttpCo
             AllowRefresh = true
         });
 
-    var redirectUrl = !string.IsNullOrWhiteSpace(login.ReturnUrl) && login.ReturnUrl.StartsWith("/")
-        ? login.ReturnUrl
-        : "/";
+    var redirectUrl = "/";
 
     return Results.Redirect(redirectUrl);
+});
+
+app.MapPost("/signout", async (HttpContext httpContext) =>
+{
+    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/loginpage");
 });
 
 app.MapStaticAssets();

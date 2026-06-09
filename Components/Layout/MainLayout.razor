@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <div class="page">
     <div class="sidebar">
@@ -8,8 +8,19 @@
 @* TODO: Integrate with backend auth *@
     <main>
         <div class="top-row px-4">
-            <span class="user-greeting">Welcome, User</span>
-            <button class="btn-primary" style="margin-left: 1rem;">Logout</button>
+            @if (isAuthenticated)
+            {
+                <span class="user-greeting">Welcome, @userName</span>
+                <form method="post" action="/signout">
+                    <AntiforgeryToken />
+                    <button type="submit" class="btn-primary" style="margin-left: 1rem;">Logout</button>
+                </form>
+            }
+            else
+            {
+                <span class="user-greeting">Welcome, Guest</span>
+                <a href="/loginpage" class="btn-primary" style="margin-left: 1rem; text-decoration: none; display: inline-block;">Login</a>
+            }
         </div>
 
         <article class="content px-4">
@@ -17,6 +28,32 @@
         </article>
     </main>
 </div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool isAuthenticated = false;
+    private string userName = "User";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthState != null)
+        {
+            var state = await AuthState;
+            if (state.User.Identity?.IsAuthenticated == true)
+            {
+                isAuthenticated = true;
+                userName = state.User.Identity.Name ?? "User";
+            }
+            else
+            {
+                isAuthenticated = false;
+                userName = "User";
+            }
+        }
+    }
+}
 
 @* TODO: Extract CSS to external file (if needed) *@
 <style>

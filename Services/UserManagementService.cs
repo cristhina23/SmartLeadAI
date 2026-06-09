@@ -32,12 +32,12 @@ public class AuthService
         var normalizedEmail = email.Trim().ToLower();
 
         // Create a fake test user
-        if (normalizedEmail == "admin@smartleadai.com")
+        if (normalizedEmail == "admin@smartleadai.com" || normalizedEmail == "admin@smartlead.com")
         {
             var fakeUser = new User
             {
                 Id = 1,
-                Email = "admin@smartleadai.com",
+                Email = normalizedEmail,
                 Role = "Admin"
             };
             
@@ -47,12 +47,12 @@ public class AuthService
             return fakeUser;
         }
         
-        if (normalizedEmail == "user@smartleadai.com")
+        if (normalizedEmail == "user@smartleadai.com" || normalizedEmail == "user@smartlead.com")
         {
             var fakeUser = new User
             {
                 Id = 2,
-                Email = "user@smartleadai.com",
+                Email = normalizedEmail,
                 Role = "User"
             };
             fakeUser.PasswordHash = HashPassword(fakeUser, "Test456!");

@@ -2,8 +2,6 @@ using System;
 using System.ComponentModel.DataAnnotations;
 namespace SmartLeadAI.Models;
 
-namespace SmartLeadAI.Models;
-
 public class Interaction
 {
     [Key]

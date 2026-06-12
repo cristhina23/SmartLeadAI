@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 namespace SmartLeadAI.Models;
 
-namespace SmartLeadAI.Models;
-
 public class Customer
 {
     [Key]

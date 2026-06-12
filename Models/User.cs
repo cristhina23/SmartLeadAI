@@ -1,12 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+namespace SmartLeadAI.Models;
 
 namespace SmartLeadAI.Models;
 
 public class User
 {
-    [Key]
-    public int Id { get; set; }
+[Key]
+public int Id { get; set; }
+
 
     [Required (ErrorMessage = "CompanyId is required.")]
     public int CompanyId { get; set; }

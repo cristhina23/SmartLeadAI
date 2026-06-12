@@ -1,0 +1,165 @@
+/* ==========================================
+   SMARTLEAD AI DESIGN SYSTEM
+   ========================================== */
+
+:root {
+
+  /* BRAND COLORS */
+  --clr-primary: #2563EB;
+  --clr-primary-dark: #1D4ED8;
+  --clr-primary-light: #60A5FA;
+
+  /* BACKGROUNDS */
+  --clr-background: #F8FAFC;
+  --clr-surface: #FFFFFF;
+
+  /* TEXT */
+  --clr-text: #0F172A;
+  --clr-text-secondary: #64748B;
+
+  /* BORDERS */
+  --clr-border: #E2E8F0;
+
+  /* STATUS COLORS */
+  --clr-success: #10B981;
+  --clr-warning: #F59E0B;
+  --clr-danger: #EF4444;
+  --clr-info: #8B5CF6;
+
+  /* RADIUS */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* SHADOWS */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+
+  /* CONTAINER */
+  --max-width: 1200px;
+}
+
+/* ==========================================
+   GLOBAL TYPOGRAPHY
+   ========================================== */
+
+body {
+  background-color: var(--clr-background);
+  color: var(--clr-text);
+  font-family: Inter, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--clr-text);
+  font-weight: 700;
+}
+
+p {
+  color: var(--clr-text-secondary);
+}
+
+/* ==========================================
+   REUSABLE CARDS
+   ========================================== */
+
+.crm-card {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+/* ==========================================
+   BUTTONS
+   ========================================== */
+
+.crm-btn-primary {
+  background: var(--clr-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: .75rem 1.25rem;
+  font-weight: 600;
+  transition: .2s ease;
+}
+
+.crm-btn-primary:hover {
+  background: var(--clr-primary-dark);
+}
+
+.crm-btn-secondary {
+  background: white;
+  color: var(--clr-primary);
+  border: 1px solid var(--clr-primary);
+  border-radius: var(--radius-md);
+  padding: .75rem 1.25rem;
+  font-weight: 600;
+}
+
+.crm-btn-secondary:hover {
+  background: #EFF6FF;
+}
+
+/* ==========================================
+   INPUTS
+   ========================================== */
+
+.crm-input {
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: .75rem;
+}
+
+.crm-input:focus {
+  outline: none;
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+}
+
+/* ==========================================
+   BADGES
+   ========================================== */
+
+.crm-badge {
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.crm-badge-success {
+  background: rgba(16,185,129,.15);
+  color: var(--clr-success);
+}
+
+.crm-badge-warning {
+  background: rgba(245,158,11,.15);
+  color: var(--clr-warning);
+}
+
+.crm-badge-danger {
+  background: rgba(239,68,68,.15);
+  color: var(--clr-danger);
+}
+
+.crm-badge-info {
+  background: rgba(139,92,246,.15);
+  color: var(--clr-info);
+}
+
+/* ==========================================
+   PAGE TITLES
+   ========================================== */
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--clr-text);
+}

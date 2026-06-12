@@ -1,12 +1,25 @@
 @page "/customers"
 @rendermode InteractiveServer
 
+@using SmartLeadAI.Models
+@using SmartLeadAI.Services
+@inject CustomerService CustomerService
+
+
 <PageTitle>Customers - Smart Lead AI</PageTitle>
+
+@if (customers == null)
+{
+    <p>Loading customers...</p>
+    return;
+}
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <h1>Customers</h1>
     @* TODO: Routing - Wire to a new "customers/add" page *@
     <button class="btn-primary">+ Add New Customer</button>
+    
+    
 </div>
 
 <div class="search-bar mt-4 mb-4">
@@ -26,82 +39,36 @@
             </tr>
         </thead>
         <tbody>
-            @if (customers == null)
+            @foreach (var customer in customers)
             {
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 2rem; color: #778DA9;">Loading customers...</td>
+                    <td>@customer.FullName</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.Phone</td>
+                    <td>@customer.InterestType</td>
+                    <td>
+                        <span class="badge badge-active">
+                            @customer.Status
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-primary"
+                                style="background-color: var(--clr-slate-light);">
+                            Details
+                        </button>
+                    </td>
                 </tr>
-            }
-            else if (!filteredCustomers.Any())
-            {
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 2rem; color: #778DA9;">No customers found. Try a different search term.</td>
-                </tr>
-            }
-            else
-            {
-                @foreach (var customer in filteredCustomers)
-                {
-                    <tr>
-                        <td>@customer.FullName</td>
-                        <td>@customer.Email</td>
-                        <td>@customer.Phone</td>
-                        <td>@customer.InterestType</td>
-                        <td>
-                            <span class="badge @GetBadgeClass(customer.Status)">@customer.Status</span>
-                        </td>
-                        <td>
-                            <a href="/customers/@customer.Id" class="btn-primary" style="background-color: var(--clr-slate-light); text-decoration: none; padding: 0.4rem 0.8rem; border-radius: 4px; display: inline-block;">Details</a>
-                        </td>
-                    </tr>
-                }
             }
         </tbody>
     </table>
 </div>
 
-@code {    private List<Customer>? customers;
-    private string searchTerm = string.Empty;
-
-    private IEnumerable<Customer> filteredCustomers =>
-        string.IsNullOrWhiteSpace(searchTerm)
-            ? customers ?? Enumerable.Empty<Customer>()
-            : customers!.Where(c => c.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                    c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-
-    public string SearchTerm
-    {
-        get => searchTerm;
-        set => searchTerm = value;
-    }
+@code {
+    private List<Customer>? customers;
 
     protected override async Task OnInitializedAsync()
     {
-        @* TODO: Backend Integration - Fetch actual data from the database using EF Core 
-            Example...
-            - customers = await DbContext.Customers.Where(c => c.CompanyId == CurrentCompanyId).ToListAsync(); *@
-
-        @* === MOCK DATA FOR UI TESTING === *@
-        await Task.Delay(200); // network latency simulation
-
-        customers = new List<Customer>
-        {
-            new Customer { Id = 1, CompanyId = 1, FullName = "Blu Berry", Email = "blu.berry@example.com", Phone = "555-1111", InterestType = "Buying", Status = "Active" },
-            new Customer { Id = 2, CompanyId = 1, FullName = "Jane Smith", Email = "jane@example.com", Phone = "555-0192", InterestType = "Renting", Status = "Lead" },
-            new Customer { Id = 3, CompanyId = 1, FullName = "Robert Ford", Email = "robert.f@example.com", Phone = "555-0205", InterestType = "Buying", Status = "Closed" }
-        };
-    }
-
-    @* Dynamic badge styling helper method *@
-    private string GetBadgeClass(string status)
-    {
-        return status?.ToLower() switch
-        {
-            "active" => "badge-active",
-            "lead" => "badge-lead",
-            "closed" => "badge-closed",
-            _ => "badge-inactive" // Default fallback
-        };
+        customers = await CustomerService.GetAllAsync();
     }
 }
 

@@ -1,0 +1,81 @@
+@page "/login"
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager NavManager
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow-lg border-0 rounded-3 p-4" style="width: 100%; max-width: 420px;">
+        
+        <!-- Branding Header -->
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary">SmartLeadAI</h2>
+            <p class="text-muted">Sign in to manage your pipeline</p>
+        </div>
+
+        <form method="post" action="/signin">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+
+            <!-- Email Field -->
+            <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                    <input id="email"
+                           name="Email"
+                           type="email"
+                           class="form-control"
+                           placeholder="name@company.com"
+                           autocomplete="username"
+                           required />
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <a href="/forgot-password" class="text-decoration-none small">Forgot password?</a>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                    <input id="password"
+                           name="Password"
+                           type="password"
+                           class="form-control"
+                           placeholder="••••••••"
+                           autocomplete="current-password"
+                           required />
+                </div>
+            </div>
+
+            <!-- Remember Me Checkbox -->
+            <div class="mb-4 form-check">
+                <input id="rememberMe" name="RememberMe" type="checkbox" class="form-check-input" />
+                <label class="form-check-label text-muted small" for="rememberMe">
+                    Keep me signed in on this device
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                Sign In
+            </button>
+        </form>
+
+    </div>
+</div>
+
+@code {
+    private string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        query.TryGetValue("ReturnUrl", out var returnUrl);
+        ReturnUrl = returnUrl.FirstOrDefault();
+    }
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; } = null!;
+}

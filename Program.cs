@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using SmartLeadAI.Data;
+using SmartLeadAI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +36,14 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddDbContext<SmartLeadContext>(options =>
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
+
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<CompanyService>();
 
 var app = builder.Build();
 
@@ -40,10 +51,11 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
@@ -94,6 +106,7 @@ app.MapPost("/signout", async (HttpContext httpContext) =>
 });
 
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

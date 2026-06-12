@@ -1,12 +1,26 @@
 @page "/customers"
 @attribute [Authorize(Roles = "Admin")]
+@rendermode InteractiveServer
+
+@using SmartLeadAI.Models
+@using SmartLeadAI.Services
+@inject CustomerService CustomerService
+
 
 <PageTitle>Customers - Smart Lead AI</PageTitle>
+
+@if (customers == null)
+{
+    <p>Loading customers...</p>
+    return;
+}
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <h1>Customers</h1>
     @* TODO: Routing - Wire to a modal or navigate to new "customers/add" page  *@
     <button class="btn-primary">+ Add New Customer</button>
+    
+    
 </div>
 
 <div class="search-bar mt-4 mb-4">
@@ -27,26 +41,26 @@
             </tr>
         </thead>
         <tbody>
-            @* TODO: Backend integration - Populate customer rows with foreach loop *@
-            <tr>
-                @* TODO: Data binding
-                - Customer FullName
-                - Email
-                - Phone
-                - InterestType *@
-                <td>Jane Smith</td>
-                <td>jane@example.com</td>
-                <td>555-0192</td>
-                <td>Buying</td>
-                <td>
-                    @* TODO: Logic - Dynamic css based on @customer.Status *@
-                    <span class="badge badge-active">Active</span>
-                </td>
-                <td>
-                    @* TODO: Routing - Wire to a modal or navigate to customer details at customers/details/@customer.Id page *@
-                    <button class="btn-primary" style="background-color: var(--clr-slate-light);">Details</button>
-                </td>
-            </tr>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.FullName</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.Phone</td>
+                    <td>@customer.InterestType</td>
+                    <td>
+                        <span class="badge badge-active">
+                            @customer.Status
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-primary"
+                                style="background-color: var(--clr-slate-light);">
+                            Details
+                        </button>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
@@ -54,6 +68,17 @@
 @* TODO: UI states (for final polish)
 - Empty state if there are 0 customers
 - Loading spinner when fetching data *@
+
+@code {
+    private List<Customer>? customers;
+
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await CustomerService.GetAllAsync();
+    }
+}
 
 @* TODO: Extract CSS to external file (if needed) *@
 <style>

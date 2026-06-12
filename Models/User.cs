@@ -9,36 +9,28 @@ public class User
 public int Id { get; set; }
 
 
-[Required]
-public int CompanyId { get; set; }
+    [Required (ErrorMessage = "CompanyId is required.")]
+    public int CompanyId { get; set; }
 
-[Required]
-[StringLength(255)]
-public string FullName { get; set; } = string.Empty;
+    [Required (ErrorMessage = "Full Name is required.")]
+    [StringLength(255, MinimumLength = 2, ErrorMessage = "Full Name must be between 2 and 255 characters.")]
+    public string FullName { get; set; } = string.Empty;
 
-[Required]
-[EmailAddress]
-public string Email { get; set; } = string.Empty;
+    [Required (ErrorMessage = "Email is required.")]
+    [EmailAddress (ErrorMessage = "Invalid email format.")]
+    public string Email { get; set; } = string.Empty;
 
-[Required]
-[StringLength(255, MinimumLength = 8)]
-public string PasswordHash { get; set; } = string.Empty;
+    [Required (ErrorMessage = "Password is required.")]
+    [StringLength(255, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 255 characters.")]
+    public string PasswordHash { get; set; } = string.Empty; 
 
-[Required]
-public string Role { get; set; } = "Employee";
+    [Required (ErrorMessage = "Role is required.")]
+    public string Role { get; set; } = "Employee"; 
 
-[Required]
-public bool IsActive { get; set; } = false;
+    [Required (ErrorMessage = "IsActive is required.")]
+    public bool IsActive { get; set; } = true;
 
-public Guid? ActivationToken { get; set; }
-
-public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-public DateTime? ActivatedAt { get; set; }
-
-// Navigation Properties
-public Company Company { get; set; } = null!;
-public ICollection<Interaction> Interactions { get; set; } = new List<Interaction>();
-
-
+    // Navigation Properties
+    public Company? Company { get; set; } 
+    public ICollection<Interaction>? Interactions { get; set; } = new List<Interaction>();
 }

@@ -1,0 +1,44 @@
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@currentCompany" OnValidSubmit="HandleValidSubmit" FormName="CreateCompanyForm">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    
+    <div>
+        <label class="required-label">Name</label>
+        <InputText @bind-Value="currentCompany.Name" class="form-control" />
+        <ValidationMessage For="() => currentCompany.Name" />
+    </div>
+
+    <div>
+        <label class="required-label">Email</label>
+        <InputText @bind-Value="currentCompany.Email" class="form-control" />
+        <ValidationMessage For="() => currentCompany.Email" />
+    </div>
+
+   
+
+    <div>
+        <label class="required-label">Phone</label>
+        <InputText @bind-Value="currentCompany.Phone" class="form-control" />
+        <ValidationMessage For="() => currentCompany.Phone" />
+    </div>
+
+    <div>
+        <label class="required-label">Created at</label>
+        <InputDate @bind-Value="currentCompany.CreatedAt" class="form-control" />
+        <ValidationMessage For="() => currentCompany.CreatedAt" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Create Company</button>
+</EditForm>
+
+@code {
+    private Company currentCompany = new Company();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine($"Saving data for: {currentCompany.Name}");
+        NavigationManager.NavigateTo("/");
+    }
+}

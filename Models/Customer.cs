@@ -7,30 +7,30 @@ public class Customer
     [Key]
     public int Id { get; set; }
 
-    [Required]
+    [Required (ErrorMessage = "Company ID is required.")]
     public int CompanyId { get; set; } 
 
-    [Required]
-    [StringLength(255)]
+    [Required (ErrorMessage = "Full name is required.")]
+    [StringLength(255, ErrorMessage = "Full name cannot exceed 255 characters.")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required]
-    [EmailAddress]
+    [Required (ErrorMessage = "Email is required.")]
+    [EmailAddress (ErrorMessage = "Invalid email format.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
-    [Phone]
+    [Required (ErrorMessage = "Phone number is required.")]
+    [Phone (ErrorMessage = "Invalid phone number format.")]
     public string Phone { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(100)]
+    [Required (ErrorMessage = "Interest type is required.")]
+    [StringLength(100, ErrorMessage = "Interest type cannot exceed 100 characters.")]
     public string InterestType { get; set; } = string.Empty;
 
     [Required]
     [StringLength(50)]
     public string Status { get; set; } = string.Empty;
 
-    [StringLength(1000)]
+    [StringLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters.")]
     public string Notes { get; set; } = string.Empty;
 
     // Navigation Properties

@@ -1,0 +1,104 @@
+@if (IsVisible)
+{
+    <div class="modal-backdrop">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h2>Log Interaction</h2>
+                <button class="btn-close" @onclick="CloseModal" aria-label="Close">×</button>
+            </div>
+
+            <div class="modal-body">
+                @* TODO: Need to wrap in <EditForm> with DataAnnotationsValidator to utilize the model attributes:
+                    - [Required] and [StringLength], etc... *@
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Interaction Type</label>
+                        <select @bind="newInteraction.Type" class="form-control">
+                            <option value="">Select Type...</option>
+                            <option value="Call">Phone Call</option>
+                            <option value="Email">Email</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Note">Internal Note</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" @bind="newInteraction.InteractionDate" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Interaction Notes</label>
+                    <textarea @bind="newInteraction.Notes" class="form-control" rows="4" placeholder="What was discussed?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Next Follow-Up (Optional)</label>
+                    <input type="date" @bind="newInteraction.NextFollowUp" class="form-control" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" @onclick="CloseModal">Cancel</button>
+                <button class="btn-primary" @onclick="SaveInteraction">Save Interaction</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public int CustomerId { get; set; }
+
+    [Parameter]
+    public int CurrentUserId { get; set; }
+
+    [Parameter]
+    public EventCallback OnInteractionSaved { get; set; }
+
+    private Interaction newInteraction = new();
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && newInteraction.CustomerId == 0)
+        {
+            @* reset form when opened *@
+            newInteraction = new Interaction
+            {
+                CustomerId = this.CustomerId,
+                UserId = this.CurrentUserId,
+                InteractionDate = DateTime.UtcNow
+            };
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+        
+        @* reset  object the next time it opens *@
+        newInteraction = new();
+    }
+
+    private async Task SaveInteraction()
+    {
+        @* TODO: Inject dbcontext or service here
+            Example...
+            - await DbContext.Interactions.AddAsync(newInteraction);
+            - await DbContext.SaveChangesAsync(); *@
+        
+        Console.WriteLine($"Saved Interaction: {newInteraction.Type} on {newInteraction.InteractionDate}");
+        
+        await OnInteractionSaved.InvokeAsync();
+        
+        await CloseModal();
+    }
+}

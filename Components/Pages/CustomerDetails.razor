@@ -1,0 +1,135 @@
+@page "/customers/{Id:int}"
+@rendermode InteractiveServer
+
+@* TODO:Inject Database Context or Customer/Interaction Services here *@
+@* Something like: @inject ApplicationDbContext DbContext *@
+
+<PageTitle>Customer Details - Smart Lead AI</PageTitle>
+
+<div class="page-header">
+    <div class="breadcrumbs">
+        <a href="/customers">Customers</a> > <span>Details</span>
+    </div>
+</div>
+
+@if (customer == null)
+{
+    <div class="loading-state">Loading customer data...</div>
+}
+else
+{
+    <div class="details-container">
+        <header class="customer-header card">
+            <div class="header-info">
+                <h1>@customer.FullName</h1>
+                <span class="status-badge @customer.Status?.ToLower()">@customer.Status</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary">Edit Customer</button>
+            </div>
+        </header>
+
+        <div class="content-grid">
+            <section class="info-section card">
+                <h2>Contact Information</h2>
+                <div class="info-group">
+                    <label>Email</label>
+                    <p>@(string.IsNullOrEmpty(customer.Email) ? "—" : customer.Email)</p>
+                </div>
+                <div class="info-group">
+                    <label>Phone</label>
+                    <p>@(string.IsNullOrEmpty(customer.Phone) ? "—" : customer.Phone)</p>
+                </div>
+                <div class="info-group">
+                    <label>Interest</label>
+                    <p>@customer.InterestType</p>
+                </div>
+                <div class="info-group">
+                    <label>Notes</label>
+                    <p>@(string.IsNullOrEmpty(customer.Notes) ? "No notes logged." : customer.Notes)</p>
+                </div>
+            </section>
+
+            <section class="interactions-section card">
+                <div class="section-header">
+                    <h2>Interaction History</h2>
+                    @* TODO: Implement interaction logging functionality
+                        Currently only sends a message to the console log to demo it triggers correctly
+                    *@
+                    <button class="btn-secondary" @onclick="OpenInteractionModal">+ Log Interaction</button>
+                </div>
+
+                @if (interactions == null || !interactions.Any())
+                {
+                    <div class="empty-state">
+                        <p>No interactions logged yet. Reach out to get started!</p>
+                    </div>
+                }
+                else
+                {
+                    <ul class="timeline">
+                        @foreach (var interaction in interactions.OrderByDescending(i => i.InteractionDate))
+                        {
+                            <li class="timeline-item">
+                                <div class="timeline-date">@interaction.InteractionDate.ToString("MMM dd, yyyy")</div>
+                                <div class="timeline-content">
+                                    <strong>@interaction.Type</strong>
+                                    <p>@interaction.Notes</p>
+                                    @if (interaction.NextFollowUp.HasValue)
+                                    {
+                                        <small class="follow-up">Follow up: @interaction.NextFollowUp.Value.ToString("MMM dd, yyyy")</small>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Customer? customer;
+    private List<Interaction> interactions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        @* TODO: Backend Integration - Fetch actual data from the database using EF Core
+            Example...
+            - customer = await DbContext.Customers.FindAsync(Id);
+            - interactions = await DbContext.Interactions.Where(i => i.CustomerId == Id).ToListAsync(); *@
+
+        @* === MOCK DATA FOR UI TESTING === *@
+        await Task.Delay(300); // network latency simulation
+
+        customer = new Customer 
+        { 
+            Id = this.Id, 
+            CompanyId = 1,
+            FullName = "Blu Berry", 
+            Email = "blu.berry@example.com", 
+            Phone = "555-1111", 
+            InterestType = "Buying", 
+            Status = "Active", 
+            Notes = "Looking for 3-bedroom property in downtown area. Budget is flexible." 
+        };
+
+        interactions = new List<Interaction>
+        {
+            new Interaction { Id = 1, CustomerId = this.Id, UserId = 1, Type = "Call", Notes = "Initial phone screening. Very interested in newly listed downtown condos.", InteractionDate = DateTime.Now.AddDays(-2), NextFollowUp = DateTime.Now.AddDays(5) },
+            new Interaction { Id = 2, CustomerId = this.Id, UserId = 1, Type = "Email", Notes = "Sent over the brochure for the Azure building.", InteractionDate = DateTime.Now.AddDays(-1) }
+        };
+    }
+
+    @* Console log for Log Interaction button
+        To be removed when implementing the actual function.
+    *@
+    private void OpenInteractionModal()
+    {
+        Console.WriteLine("Open Interaction Modal triggered");
+    }
+}

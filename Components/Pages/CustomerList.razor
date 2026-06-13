@@ -17,15 +17,14 @@
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <h1>Customers</h1>
-    @* TODO: Routing - Wire to a modal or navigate to new "customers/add" page  *@
+    @* TODO: Routing - Wire to a new "customers/add" page *@
     <button class="btn-primary">+ Add New Customer</button>
     
     
 </div>
 
 <div class="search-bar mt-4 mb-4">
-    @* TODO: Backend integration - Bind input to search variable to filter through db query on either change/submit *@
-    <input type="text" placeholder="Search customers by name or email..." class="form-control crm-input" disabled />
+    <input type="text" @bind="SearchTerm" @bind:event="oninput" placeholder="Search customers by name or email..." class="form-control crm-input" />
 </div>
 
 <div class="crm-card">
@@ -65,14 +64,9 @@
     </table>
 </div>
 
-@* TODO: UI states (for final polish)
-- Empty state if there are 0 customers
-- Loading spinner when fetching data *@
-
 @code {
     private List<Customer>? customers;
-
-   
+    private string SearchTerm { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,7 +77,13 @@
 @* TODO: Extract CSS to external file (if needed) *@
 <style>
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .crm-input { width: 100%; padding: 0.75rem; border: 1px solid var(--clr-light); border-radius: 4px; }
+    .crm-input { width: 100%; padding: 0.75rem; border: 1px solid #E0E1DD; border-radius: 4px; }
+    .crm-input:focus { outline: none; border-color: #1B263B; box-shadow: 0 0 0 2px rgba(27, 38, 59, 0.1); }
+    
+    /* Badges */
     .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
-    .badge-active { background-color: var(--clr-slate); color: var(--clr-white); }
+    .badge-active { background-color: var(--clr-slate, #415A77); color: var(--clr-white, #FFFFFF); }
+    .badge-lead { background-color: #778DA9; color: #FFFFFF; }
+    .badge-closed { background-color: #E0E1DD; color: #0D1B2A; }
+    .badge-inactive { background-color: #f1f1f1; color: #666; }
 </style>

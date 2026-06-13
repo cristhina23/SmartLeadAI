@@ -1,7 +1,7 @@
 // SmartLeadAI/Services/AuthService.cs
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-
+using SmartLeadAI.Models;
 
 public class AuthService
 {

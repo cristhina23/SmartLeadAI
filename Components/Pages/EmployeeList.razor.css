@@ -1,0 +1,41 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.empty-state {
+    padding: 2rem;
+    color: var(--clr-text-secondary);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* CRM Table overrides using design system tokens */
+.crm-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.crm-table th,
+.crm-table td {
+    padding: 1rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--clr-border);
+}
+
+.crm-table th {
+    color: var(--clr-text);
+    font-weight: 600;
+    background-color: var(--clr-background);
+}
+
+.crm-table tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.02);
+}

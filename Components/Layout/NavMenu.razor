@@ -1,36 +1,55 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Smart Lead AI</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+﻿<div class="sidebar-container">
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/dashboard" Match="NavLinkMatch.All">
+                <i class="bi bi-house-door-fill"></i> <span>Dashboard</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="customers">
-                <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Customers
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/customers">
+                <i class="bi bi-people-fill"></i> <span>Customers</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="employees">
-                <span class="bi bi-person-badge-fill-nav-menu" aria-hidden="true"></span> Employees
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/employees">
+                <i class="bi bi-person-badge-fill"></i> <span>Employees</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/interactions">
+                <i class="bi bi-chat-left-dots-fill"></i> <span>Interactions</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/followups">
+                <i class="bi bi-calendar-check-fill"></i> <span>Follow-ups</span>
+            </NavLink>
+        </div>
+        
+        <div class="nav-divider"></div>
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/reports">
+                <i class="bi bi-bar-chart-fill"></i> <span>Reports</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/settings">
+                <i class="bi bi-gear-fill"></i> <span>Settings</span>
             </NavLink>
         </div>
     </nav>
-</div>
 
-@* TODO: Extract CSS to external file (if needed) *@
-<style>
-    /* Scoped styling to override default Blazor nav styles with our theme */
-    .navbar-brand { color: var(--clr-white); font-weight: 700; font-family: var(--font-primary); }
-    .nav-link { color: var(--clr-light); padding: 0.75rem 1rem; border-radius: 4px; transition: background-color 0.2s; }
-    .nav-link:hover { background-color: var(--clr-slate); color: var(--clr-white); }
-    .nav-link.active { background-color: var(--clr-navy); color: var(--clr-white); border-left: 4px solid var(--clr-slate-light); }
-</style>
+    <div class="sidebar-footer">
+        <div class="company-badge">
+            <div class="building-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="company-details">
+                <span class="company-name">Acme Company</span>
+                <span class="user-role">Admin</span>
+            </div>
+            <i class="bi bi-chevron-down ms-auto" style="color: #94A3B8; font-size: 0.8rem;"></i>
+        </div>
+    </div>
+</div>

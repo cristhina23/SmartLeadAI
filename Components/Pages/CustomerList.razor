@@ -1,33 +1,35 @@
 @page "/customers"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [AllowAnonymous]
 @rendermode InteractiveServer
 
 @using SmartLeadAI.Models
 @using SmartLeadAI.Services
 @inject CustomerService CustomerService
 
-
 <PageTitle>Customers - Smart Lead AI</PageTitle>
 
 @if (customers == null)
 {
-    <p>Loading customers...</p>
+    <div class="loading-container">
+        <p>Loading customers...</p>
+    </div>
     return;
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
-    <h1>Customers</h1>
-    @* TODO: Routing - Wire to a new "customers/add" page *@
-    <button class="btn-primary">+ Add New Customer</button>
-    
-    
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Customers</h1>
+    <a href="/register" class="crm-btn-primary text-decoration-none">+ Add New Customer</a>
 </div>
 
-<div class="search-bar mt-4 mb-4">
-    <input type="text" @bind="SearchTerm" @bind:event="oninput" placeholder="Search customers by name or email..." class="form-control crm-input" />
+<div class="search-container mt-4 mb-4">
+    <input type="text" 
+           @bind="SearchTerm" 
+           @bind:event="oninput" 
+           placeholder="Search customers by name or email..." 
+           class="crm-input w-100" />
 </div>
 
-<div class="crm-card">
+<div class="crm-card table-responsive">
     <table class="crm-table">
         <thead>
             <tr>
@@ -40,25 +42,33 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var customer in customers)
+            @if (!FilteredCustomers.Any())
             {
                 <tr>
-                    <td>@customer.FullName</td>
-                    <td>@customer.Email</td>
-                    <td>@customer.Phone</td>
-                    <td>@customer.InterestType</td>
-                    <td>
-                        <span class="badge badge-active">
-                            @customer.Status
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn-primary"
-                                style="background-color: var(--clr-slate-light);">
-                            Details
-                        </button>
-                    </td>
+                    <td colspan="6" class="text-center empty-state">No customers found matching your search.</td>
                 </tr>
+            }
+            else
+            {
+                @foreach (var customer in FilteredCustomers)
+                {
+                    <tr>
+                        <td>@customer.FullName</td>
+                        <td>@customer.Email</td>
+                        <td>@customer.Phone</td>
+                        <td>@customer.InterestType</td>
+                        <td>
+                            <span class="crm-badge @GetStatusBadgeClass(customer.Status)">
+                                @customer.Status
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/customers/@customer.Id" class="crm-btn-secondary text-decoration-none">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -68,22 +78,26 @@
     private List<Customer>? customers;
     private string SearchTerm { get; set; } = string.Empty;
 
+    private IEnumerable<Customer> FilteredCustomers =>
+        string.IsNullOrWhiteSpace(SearchTerm)
+            ? customers ?? new List<Customer>()
+            : customers?.Where(c => c.FullName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                    c.Email.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+              ?? new List<Customer>();
+
     protected override async Task OnInitializedAsync()
     {
         customers = await CustomerService.GetAllAsync();
     }
-}
 
-@* TODO: Extract CSS to external file (if needed) *@
-<style>
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .crm-input { width: 100%; padding: 0.75rem; border: 1px solid #E0E1DD; border-radius: 4px; }
-    .crm-input:focus { outline: none; border-color: #1B263B; box-shadow: 0 0 0 2px rgba(27, 38, 59, 0.1); }
-    
-    /* Badges */
-    .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
-    .badge-active { background-color: var(--clr-slate, #415A77); color: var(--clr-white, #FFFFFF); }
-    .badge-lead { background-color: #778DA9; color: #FFFFFF; }
-    .badge-closed { background-color: #E0E1DD; color: #0D1B2A; }
-    .badge-inactive { background-color: #f1f1f1; color: #666; }
-</style>
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "active" => "crm-badge-success",
+            "lead" => "crm-badge-info",
+            "closed" => "crm-badge-warning",
+            _ => "crm-badge-info"
+        };
+    }
+}

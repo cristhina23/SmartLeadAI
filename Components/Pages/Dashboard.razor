@@ -1,72 +1,272 @@
-@page "/dasboard"
+@page "/dashboard"
+@attribute [AllowAnonymous]
+@rendermode InteractiveServer
+
+@using SmartLeadAI.Models
 
 <PageTitle>Dashboard - Smart Lead AI</PageTitle>
 
-<div class="dashboard-header">
-    <h1>Dashboard</h1>
-    @* TODO: AI integration - AI smart reminders component here *@
+<div class="dashboard-container mt-4">
+    <div class="dashboard-header mb-4">
+        <div>
+            <h1 class="page-title mb-1">Dashboard</h1>
+            <p class="subtitle-text">Welcome back! Here's a summary of your smart lead activities.</p>
+        </div>
+        <div class="ai-banner-badge">
+            <span class="crm-badge crm-badge-info">
+                <i class="bi bi-stars me-1"></i> AI Co-Pilot Active
+            </span>
+        </div>
     </div>
 
-<div class="stats-grid">
-    <div class="crm-card stat-card">
-        <h3>Total Customers</h3>
-        @* TODO: Backend integration - Fetch total customers from db *@
-        <p class="stat-number">124</p>
+    <div class="stats-grid">
+        <div class="crm-card stat-card">
+            <div class="stat-icon-wrapper customer-icon-bg">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <h3 class="stat-label">Total Customers</h3>
+                <p class="stat-number">@totalCustomersCount</p>
+            </div>
+        </div>
+        <div class="crm-card stat-card">
+            <div class="stat-icon-wrapper follow-icon-bg">
+                <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div>
+                <h3 class="stat-label">Active Follow-ups</h3>
+                <p class="stat-number">@activeFollowUpsCount</p>
+            </div>
+        </div>
+        <div class="crm-card stat-card">
+            <div class="stat-icon-wrapper recent-icon-bg">
+                <i class="bi bi-lightning-charge-fill"></i>
+            </div>
+            <div>
+                <h3 class="stat-label">Recent Interactions</h3>
+                <p class="stat-number">@recentInteractionsCount</p>
+            </div>
+        </div>
     </div>
-    <div class="crm-card stat-card">
-        <h3>Active Follow-ups</h3>
-        @* TODO: Backend integration - Fetch active follow-ups from future NextFollowUp in db *@
-        <p class="stat-number">12</p>
-    </div>
-    <div class="crm-card stat-card">
-        <h3>Recent Interactions</h3>
-        @* TODO: Backend integration - Fetch recent interactions (Between a range of days) *@
-        <p class="stat-number">45</p>
-    </div>
-</div>
 
-<div class="dashboard-sections mt-4">
-    <div class="crm-card">
-        <h2>Recent Activity</h2>
-        @* TODO: Backend integration - Replace with a foreach loop for Interactions list *@
-        <p class="text-muted">Loading placeholder...</p>
+    <div class="dashboard-sections mt-4">
+        <div class="crm-card activity-panel">
+            <h2 class="section-title">Recent Activity</h2>
+            <div class="activity-feed">
+                @if (mockActivities == null || !mockActivities.Any())
+                {
+                    <p class="text-muted italic-state">No interactions logged recently.</p>
+                }
+                else
+                {
+                    @foreach (var activity in mockActivities)
+                    {
+                        <div class="activity-item">
+                            <div class="activity-icon-bullet @GetActivityTypeColor(activity.Type)">
+                                <i class="bi @GetActivityIconClass(activity.Type)"></i>
+                            </div>
+                            <div class="activity-details">
+                                <span class="activity-timestamp">@activity.Date.ToString("hh:mm tt")</span>
+                                <p class="activity-text">
+                                    <strong>@activity.CustomerName</strong>: 
+                                    <span class="text-secondary">@activity.Summary</span>
+                                </p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
 
-    <div class="crm-card mt-4">
-        <h2>Upcoming Follow-ups</h2>
-        <table class="crm-table">
-            <thead>
-                <tr>
-                    <th>Customer Name</th>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @* TODO: Backend integration - Replace with a foreach loop for NextFollowUp that's > DateTime.Now *@
-                <tr>
-                    @* TODO: Data binding
-                    - Customer FullName
-                    - NextFollowUp date
-                    - Follow-up Type like Email, Phone, WhatsApp *@
-                    <td>John Doe</td>
-                    <td>Oct 24, 2026</td>
-                    <td>WhatsApp</td>
-                    <td>
-                        @* TODO: Button routing to view full past interaction details *@
-                        <button class="btn-primary">View</button></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="crm-card table-panel">
+            <h2 class="section-title">Upcoming Follow-ups</h2>
+            <div class="responsive-table-wrapper">
+                <table class="crm-table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Target Date</th>
+                            <th>Channel Type</th>
+                            <th class="text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (mockFollowUps == null || !mockFollowUps.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No upcoming deliverables scheduled.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var followUp in mockFollowUps)
+                            {
+                                <tr>
+                                    <td data-label="Customer" class="font-semibold text-main">@followUp.CustomerName</td>
+                                    <td data-label="Target Date">@followUp.TargetDate.ToString("MMM dd, yyyy")</td>
+                                    <td data-label="Channel">
+                                        <span class="channel-pill">
+                                            <i class="bi @GetChannelIconClass(followUp.Channel) me-1"></i> @followUp.Channel
+                                        </span>
+                                    </td>
+                                    <td class="action-cell">
+                                        <div class="crm-mobile-center">
+                                            <a href="/customers/@followUp.CustomerId" class="crm-btn-secondary btn-sm text-decoration-none">
+                                                View Profile
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-@* TODO: Extract CSS to external file (if needed) *@
 <style>
-    .dashboard-header { margin-bottom: 2rem; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-    .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--clr-slate); margin: 0; }
-    .mt-4 { margin-top: 1.5rem; }
-    .text-muted { color: var(--clr-slate-light); }
+    @@media screen and (max-width: 930px) {
+        .crm-table-responsive thead {
+            display: none !important;
+        }
+
+        .crm-table-responsive tr {
+            display: block !important;
+            border: 1px solid var(--clr-border) !important;
+            border-radius: var(--radius-md) !important;
+            background-color: var(--clr-background) !important;
+            padding: 0.75rem 1.25rem !important;
+            margin-bottom: 1rem !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+
+        .crm-table-responsive td {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0.6rem 0 !important;
+            border-bottom: 1px dashed var(--clr-border) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .crm-table-responsive td::before {
+            content: attr(data-label) !important;
+            font-weight: 700 !important;
+            color: var(--clr-text-secondary) !important;
+            text-transform: uppercase !important;
+            font-size: 0.75rem !important;
+            letter-spacing: 0.05em !important;
+        }
+
+        .crm-table-responsive td.action-cell {
+            display: block !important;
+            border-bottom: none !important;
+            padding-top: 0.85rem !important;
+            padding-bottom: 0.25rem !important;
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        .crm-table-responsive td.action-cell::before {
+            content: none !important;
+        }
+
+        .crm-mobile-center {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        .crm-mobile-center .crm-btn-secondary {
+            display: inline-flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            padding: 0.5rem 1rem !important;
+        }
+    }
 </style>
+
+@code {
+    private int totalCustomersCount = 124;
+    private int activeFollowUpsCount = 12;
+    private int recentInteractionsCount = 45;
+
+    private List<RecentActivityMock> mockActivities = new();
+    private List<UpcomingFollowUpMock> mockFollowUps = new();
+
+    protected override void OnInitialized()
+    {
+        mockActivities = new List<RecentActivityMock>
+        {
+            new RecentActivityMock { CustomerName = "Blu Berry", Type = "Call", Summary = "Discussed downtown 3-bed condos.", Date = DateTime.Now.AddMinutes(-45) },
+            new RecentActivityMock { CustomerName = "John Doe", Type = "Email", Summary = "Sent introduction quote schema.", Date = DateTime.Now.AddHours(-3) },
+            new RecentActivityMock { CustomerName = "Elena Rostova", Type = "WhatsApp", Summary = "Confirmed viewing schedules.", Date = DateTime.Now.AddHours(-5) }
+        };
+
+        mockFollowUps = new List<UpcomingFollowUpMock>
+        {
+            new UpcomingFollowUpMock { CustomerId = 1, CustomerName = "John Doe", TargetDate = DateTime.Now.AddDays(1), Channel = "WhatsApp" },
+            new UpcomingFollowUpMock { CustomerId = 3, CustomerName = "Elena Rostova", TargetDate = DateTime.Now.AddDays(2), Channel = "Phone" },
+            new UpcomingFollowUpMock { CustomerId = 1, CustomerName = "Sarah Jenkins", TargetDate = DateTime.Now.AddDays(4), Channel = "Email" }
+        };
+    }
+
+    private string GetActivityTypeColor(string type)
+    {
+        return type.ToLower() switch
+        {
+            "call" => "icon-primary",
+            "email" => "icon-info",
+            "whatsapp" => "icon-success",
+            _ => "icon-secondary"
+        };
+    }
+
+    private string GetActivityIconClass(string type)
+    {
+        return type.ToLower() switch
+        {
+            "call" => "bi-telephone-outbound-fill",
+            "email" => "bi-envelope-paper-fill",
+            "whatsapp" => "bi-whatsapp",
+            _ => "bi-chat-left-text-fill"
+        };
+    }
+
+    private string GetChannelIconClass(string channel)
+    {
+        return channel.ToLower() switch
+        {
+            "phone" => "bi-telephone",
+            "email" => "bi-envelope",
+            "whatsapp" => "bi-whatsapp",
+            _ => "bi-chat"
+        };
+    }
+
+    private class RecentActivityMock
+    {
+        public string CustomerName { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+    }
+
+    private class UpcomingFollowUpMock
+    {
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public DateTime TargetDate { get; set; }
+        public string Channel { get; set; } = string.Empty;
+    }
+}

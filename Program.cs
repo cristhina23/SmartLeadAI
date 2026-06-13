@@ -35,7 +35,6 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri(sp.GetRequiredService<NavigationManager>().BaseUri)
 });
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthService>();
 builder.Services.AddDbContext<SmartLeadContext>(options =>
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")
@@ -44,6 +43,7 @@ builder.Services.AddDbContext<SmartLeadContext>(options =>
 
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CompanyService>();
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 

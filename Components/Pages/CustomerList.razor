@@ -66,6 +66,7 @@
 
 @code {
     private List<Customer>? customers;
+    private string SearchTerm { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {

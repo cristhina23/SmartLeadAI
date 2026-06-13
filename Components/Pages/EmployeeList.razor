@@ -1,20 +1,18 @@
-@using Microsoft.AspNetCore.Authorization;
-
 @page "/employees"
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Admin")]
-@* Restricts this endpoint solely to Administrative accounts *@
 
 <PageTitle>Employees - Smart Lead AI</PageTitle>
 
-<div class="page-header">
-    <h1>Employee Management</h1>
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Employee Management</h1>
     @* TODO: Routing - Wire to a modal or navigate to employees/add page *@
-    <button class="btn-primary">+ Add Employee</button>
+    <button class="crm-btn-primary">+ Add Employee</button>
 </div>
 
-<div class="crm-card mt-4">
+<div class="crm-card">
     <table class="crm-table">
         <thead>
             <tr>
@@ -29,7 +27,7 @@
             @if (employees == null || !employees.Any())
             {
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 2rem; color: #778DA9;">No employees found.</td>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--clr-text-secondary);">No employees found.</td>
                 </tr>
             }
             else
@@ -41,12 +39,12 @@
                         <td>@employee.Email</td>
                         <td>@employee.Role</td>
                         <td>
-                            <span class="badge @(employee.IsActive ? "badge-active" : "badge-inactive")">
+                            <span class="crm-badge @(employee.IsActive ? "crm-badge-success" : "crm-badge-warning")">
                                 @(employee.IsActive ? "Active" : "Inactive")
                             </span>
                         </td>
                         <td>
-                            <button class="btn-primary" style="background-color: var(--clr-slate-light);" @onclick="() => OpenEditModal(employee)">Edit</button>
+                            <button class="crm-btn-secondary" @onclick="() => OpenEditModal(employee)">Edit</button>
                         </td>
                     </tr>
                 }
@@ -59,17 +57,11 @@
 
 @code {
     private bool isEditModalVisible = false;
-    
     private User selectedEmployee = new();
-
     private List<User> employees = new();
 
     protected override async Task OnInitializedAsync()
     {
-        @* TODO: Backend Integration - Fetch actual data from the database using EF Core
-            Example...
-            - employees = await DbContext.Users.Where(u => u.CompanyId == CurrentCompanyId).ToListAsync(); *@
-
         @* === MOCK DATA FOR UI TESTING === *@
         await Task.Delay(200); // network latency simulation
 
@@ -85,17 +77,5 @@
     {
         selectedEmployee = employee;
         isEditModalVisible = true;
-        
-        @* TODO: Pass 'selectedEmployee' into the EditEmployeeModal as a Parameter with real data *@
     }
 }
-
-@* TODO: Extract CSS to external file (if needed)
-    Note: Need to work on dynamic viewing for mobile view/smaller width.
-    - Change table to a different layout *@
-<style>
-    .page-header { display: flex; justify-content: space-between; align-items: center; }
-    .badge { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
-    .badge-active { background-color: var(--clr-slate); color: var(--clr-white); }
-    .mt-4 { margin-top: 1.5rem; }
-</style>

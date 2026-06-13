@@ -32,9 +32,9 @@
   --radius-lg: 16px;
 
   /* SHADOWS */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, .10);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, .12);
 
   /* CONTAINER */
   --max-width: 1200px;
@@ -120,7 +120,7 @@ p {
 .crm-input:focus {
   outline: none;
   border-color: var(--clr-primary);
-  box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .15);
 }
 
 /* ==========================================
@@ -135,22 +135,22 @@ p {
 }
 
 .crm-badge-success {
-  background: rgba(16,185,129,.15);
+  background: rgba(16, 185, 129, .15);
   color: var(--clr-success);
 }
 
 .crm-badge-warning {
-  background: rgba(245,158,11,.15);
+  background: rgba(245, 158, 11, .15);
   color: var(--clr-warning);
 }
 
 .crm-badge-danger {
-  background: rgba(239,68,68,.15);
+  background: rgba(239, 68, 68, .15);
   color: var(--clr-danger);
 }
 
 .crm-badge-info {
-  background: rgba(139,92,246,.15);
+  background: rgba(139, 92, 246, .15);
   color: var(--clr-info);
 }
 
@@ -162,4 +162,67 @@ p {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--clr-text);
+}
+
+.sidebar-container .nav-link {
+  color: #FFFFFF !important;
+}
+
+/* ==========================================
+   SIDEBAR OVERRIDES (Smart Lead AI)
+   ========================================== */
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 260px;
+  background-color: #012564;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  border-radius: 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  margin: 0 0.5rem;
+}
+
+/* Hover Effect */
+.nav-link:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  background-color: var(--clr-primary);
+  color: #FFFFFF;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.9rem 1.5rem;
+}
+
+/* Icon Alignment */
+.nav-link i {
+  width: 1.5rem;
+  text-align: center;
+  margin-right: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nav-link.active i {
+  color: #FFFFFF;
 }

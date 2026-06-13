@@ -1,67 +1,37 @@
 @inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-@* TODO: Integrate with backend auth *@
-    <main>
-        <div class="top-row px-4">
-            @if (isAuthenticated)
-            {
-                <span class="user-greeting">Welcome, @userName</span>
-                <form method="post" action="/signout">
-                    <AntiforgeryToken />
-                    <button type="submit" class="btn-primary" style="margin-left: 1rem;">Logout</button>
-                </form>
-            }
-            else
-            {
-                <span class="user-greeting">Welcome, Guest</span>
-                <a href="/loginpage" class="btn-primary" style="margin-left: 1rem; text-decoration: none; display: inline-block;">Login</a>
-            }
+<div class="app-layout">
+    <aside class="sidebar-container">
+        <div class="logo-header">
+            <img src="images/smartlead-logo.png" alt="SmartLead AI" class="brand-logo" />
         </div>
+        <div class="sidebar-content">
+            <NavMenu />
+        </div>
+    </aside>
 
-        <article class="content px-4">
+    <div class="main-wrapper">
+        <header class="top-navbar">
+            <div class="search-bar">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" placeholder="Search anything..." class="search-input" />
+            </div>
+
+            <div class="user-profile">
+                <div class="notification-wrapper">
+                    <i class="bi bi-bell notification-icon"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <img src="images/avatar.png" alt="Admin" class="avatar" />
+                <div class="user-info">
+                    <span class="user-greeting">Welcome, Admin</span>
+                    <span class="user-company">Acme Company <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i></span>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
             @Body
-        </article>
-    </main>
+        </main>
+    </div>
 </div>
-
-@code {
-    [CascadingParameter]
-    private Task<AuthenticationState>? AuthState { get; set; }
-
-    private bool isAuthenticated = false;
-    private string userName = "User";
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (AuthState != null)
-        {
-            var state = await AuthState;
-            if (state.User.Identity?.IsAuthenticated == true)
-            {
-                isAuthenticated = true;
-                userName = state.User.Identity.Name ?? "User";
-            }
-            else
-            {
-                isAuthenticated = false;
-                userName = "User";
-            }
-        }
-    }
-}
-
-@* TODO: Extract CSS to external file (if needed) *@
-<style>
-    /* Phase 1: Layout Scoped CSS */
-    .page { display: flex; min-height: 100vh; }
-    .sidebar { width: 250px; background-color: var(--clr-navy-dark); color: var(--clr-white); }
-    main { flex: 1; display: flex; flex-direction: column; background-color: var(--clr-light); }
-    .top-row { height: 60px; background-color: var(--clr-white); display: flex; align-items: center; justify-content: flex-end; border-bottom: 1px solid var(--clr-slate-light); }
-    .content { padding: 2rem; }
-    .user-greeting { font-weight: 500; color: var(--clr-slate); }
-</style>

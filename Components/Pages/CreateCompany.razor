@@ -1,11 +1,10 @@
-@using SmartLeadAI.Components;
+@page "/register"
+@using SmartLeadAI.Components
+@layout PublicLayout 
 
+<PageTitle>Register - SmartLead AI</PageTitle>
 
-@page "/companies/create"
-@attribute [Authorize(Roles = "Admin")]
-
-@rendermode InteractiveServer
-
-<h3>Create Company</h3>
-
-<CreateCompanyForm/>
+<div style="padding: 2rem; max-width: 600px; margin: 0 auto;">
+    <h2>Create Your Account</h2>
+    <CreateCompanyForm />
+</div>

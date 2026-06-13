@@ -1,0 +1,9 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.w-100 {
+    width: 100%;
+}

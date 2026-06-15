@@ -12,7 +12,7 @@
     display: flex;
     flex-direction: column;
     background-color: #012564;
-    z-index: 10;
+    z-index: 1000;
 }
 
 .logo-header {
@@ -143,4 +143,37 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
+}
+
+/* DESKTOP (> 768px): Never hide the sidebar via state */
+@media (min-width: 769px) {
+    .app-layout.sidebar-collapsed .sidebar-container {
+        margin-left: 0;
+        /* Forced to show on desktop */
+    }
+}
+
+/* MOBILE (<= 768px): The Overlay Pattern */
+@media (max-width: 768px) {
+    .app-layout.sidebar-collapsed .sidebar-container {
+        position: absolute;
+        left: 0;
+        margin-left: 0;
+    }
+
+    .app-layout:not(.sidebar-collapsed) .sidebar-container {
+        position: absolute;
+        left: -260px;
+        margin-left: -260px;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
 }

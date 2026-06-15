@@ -12,11 +12,9 @@ using SmartLeadAI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// 1. Register Core Security Architecture 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -24,8 +22,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.LoginPath = "/loginpage";
-        options.AccessDeniedPath = "/loginpage";
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
     });
 
 builder.Services.AddAuthorization();
@@ -35,11 +33,13 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri(sp.GetRequiredService<NavigationManager>().BaseUri)
 });
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddDbContext<SmartLeadContext>(options =>
+builder.Services.AddDbContextFactory<SmartLeadContext>(options =>
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
+builder.Services.AddScoped<SmartLeadContext>(p => 
+    p.GetRequiredService<IDbContextFactory<SmartLeadContext>>().CreateDbContext());
 
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CompanyService>();
@@ -62,12 +62,18 @@ app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/signin", async ([Microsoft.AspNetCore.Mvc.FromForm] LoginModel login, AuthService authService, IHttpContextAccessor httpContextAccessor) =>
+app.MapPost("/signin", async (
+    [Microsoft.AspNetCore.Mvc.FromForm] LoginModel login,
+    [Microsoft.AspNetCore.Mvc.FromForm] string? returnUrl,
+    AuthService authService,
+    IHttpContextAccessor httpContextAccessor) =>
 {
     var user = await authService.GetUserByEmailAsync(login.Email);
+    
     if (user == null || !authService.VerifyPassword(user, login.Password))
     {
-        return Results.BadRequest(new { error = "Invalid email or password combination." });
+        string errorQueryValue = Uri.EscapeDataString("Invalid email or password combination.");
+        return Results.Redirect($"/login?error={errorQueryValue}");
     }
 
     var claims = new[] {
@@ -94,15 +100,18 @@ app.MapPost("/signin", async ([Microsoft.AspNetCore.Mvc.FromForm] LoginModel log
             AllowRefresh = true
         });
 
-    var redirectUrl = "/";
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) || returnUrl == "/"
+        ? "/dashboard"
+        : returnUrl;
 
     return Results.Redirect(redirectUrl);
-});
+})
+.DisableAntiforgery();
 
 app.MapPost("/signout", async (HttpContext httpContext) =>
 {
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    return Results.Redirect("/loginpage");
+    return Results.Redirect("/login");
 });
 
 app.MapStaticAssets();

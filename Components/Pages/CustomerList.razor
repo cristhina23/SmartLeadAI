@@ -1,24 +1,18 @@
 @page "/customers"
-@attribute [AllowAnonymous]
+@attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
 
 @using SmartLeadAI.Models
-@using SmartLeadAI.Services
-@inject CustomerService CustomerService
+@using SmartLeadAI.Data
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 
 <PageTitle>Customers - Smart Lead AI</PageTitle>
 
-@if (customers == null)
-{
-    <div class="loading-container">
-        <p>Loading customers...</p>
-    </div>
-    return;
-}
-
 <div class="page-header mt-4 mb-4">
     <h1 class="page-title">Customers</h1>
-    <a href="/register" class="crm-btn-primary text-decoration-none">+ Add New Customer</a>
+    <a href="/customers/create" class="crm-btn-primary text-decoration-none">+ Add New Customer</a>
 </div>
 
 <div class="search-container mt-4 mb-4">
@@ -42,7 +36,15 @@
             </tr>
         </thead>
         <tbody>
-            @if (!FilteredCustomers.Any())
+            @if (customers == null)
+            {
+                <tr>
+                    <td colspan="6" class="text-center empty-state">
+                        <span class="loading-spinner">Loading customers from database...</span>
+                    </td>
+                </tr>
+            }
+            else if (!FilteredCustomers.Any())
             {
                 <tr>
                     <td colspan="6" class="text-center empty-state">No customers found matching your search.</td>
@@ -81,16 +83,21 @@
     private IEnumerable<Customer> FilteredCustomers =>
         string.IsNullOrWhiteSpace(SearchTerm)
             ? customers ?? new List<Customer>()
-            : customers?.Where(c => c.FullName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                                    c.Email.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+            : customers?.Where(c => (c.FullName?.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                    (c.Email?.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
               ?? new List<Customer>();
 
     protected override async Task OnInitializedAsync()
     {
-        customers = await CustomerService.GetAllAsync();
+        using var context = await DbFactory.CreateDbContextAsync();
+        
+        customers = await context.Customers
+            .AsNoTracking()
+            .OrderBy(c => c.FullName)
+            .ToListAsync();
     }
 
-    private string GetStatusBadgeClass(string status)
+    private string GetStatusBadgeClass(string? status)
     {
         return status?.ToLower() switch
         {

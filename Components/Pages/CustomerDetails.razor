@@ -3,8 +3,9 @@
 @rendermode InteractiveServer
 
 @using SmartLeadAI.Models
-@using SmartLeadAI.Services
-@inject CustomerService CustomerService
+@using SmartLeadAI.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 
 <PageTitle>Customer Details - Smart Lead AI</PageTitle>
 
@@ -16,8 +17,8 @@
 
 @if (customer == null)
 {
-    <div class="loading-state">
-        <p>Loading customer data...</p>
+    <div class="loading-state text-center mt-5">
+        <span class="loading-spinner">Loading customer data from database...</span>
     </div>
 }
 else
@@ -29,7 +30,7 @@ else
                 <span class="crm-badge @GetStatusBadgeClass(customer.Status)">@customer.Status</span>
             </div>
             <div class="header-actions">
-                <button class="crm-btn-primary">Edit Customer</button>
+                <button class="crm-btn-primary" @onclick="OpenEditCustomerModal">Edit Customer</button>
             </div>
         </header>
 
@@ -66,7 +67,7 @@ else
 
                 @if (interactions == null || !interactions.Any())
                 {
-                    <div class="empty-state">
+                    <div class="empty-state text-center mt-4">
                         <p>No interactions logged yet. Reach out to get started!</p>
                     </div>
                 }
@@ -97,38 +98,66 @@ else
     </div>
 }
 
+@* --- MODAL REGISTRATIONS --- *@
+
+@* 1. Edit Customer Modal *@
+<EditCustomerModal 
+    @bind-IsVisible="isEditCustomerModalVisible" 
+    Customer="customer" 
+    OnSaveCallback="LoadCustomerDetails" />
+
+@* 2. Log Interaction Modal *@
+@if (isInteractionModalVisible)
+{
+    <div class="modal-backdrop" @onclick="CloseInteractionModal">
+        <div class="modal-content crm-card" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h2 class="modal-title">Log Interaction</h2>
+                <button class="btn-close" @onclick="CloseInteractionModal">×</button>
+            </div>
+            <div class="modal-body">
+                <CreateInteractionForm 
+                    CustomerId="Id" 
+                    IsRenderedInModal="true" 
+                    OnSaveCallback="async () => { await LoadCustomerDetails(); CloseInteractionModal(); }" 
+                    OnCancelCallback="CloseInteractionModal" />
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
     private Customer? customer;
     private List<Interaction> interactions = new();
+    
+    private bool isEditCustomerModalVisible = false;
+    private bool isInteractionModalVisible = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Switch this to CustomerService db extraction during
-        await Task.Delay(300); // network latency simulation
-
-        customer = new Customer 
-        { 
-            Id = this.Id, 
-            CompanyId = 1,
-            FullName = "Blu Berry", 
-            Email = "blu.berry@example.com", 
-            Phone = "555-1111", 
-            InterestType = "Buying", 
-            Status = "Active", 
-            Notes = "Looking for 3-bedroom property in downtown area. Budget is flexible." 
-        };
-
-        interactions = new List<Interaction>
-        {
-            new Interaction { Id = 1, CustomerId = this.Id, UserId = 1, Type = "Call", Notes = "Initial phone screening. Very interested in newly listed downtown condos.", InteractionDate = DateTime.Now.AddDays(-2), NextFollowUp = DateTime.Now.AddDays(5) },
-            new Interaction { Id = 2, CustomerId = this.Id, UserId = 1, Type = "Email", Notes = "Sent over the brochure for the Azure building.", InteractionDate = DateTime.Now.AddDays(-1) }
-        };
+        await LoadCustomerDetails();
     }
 
-    private string GetStatusBadgeClass(string status)
+    private async Task LoadCustomerDetails()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        customer = await context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == Id);
+
+        if (customer != null)
+        {
+            interactions = await context.Interactions
+                .AsNoTracking()
+                .Where(i => i.CustomerId == Id)
+                .ToListAsync();
+        }
+    }
+
+    private string GetStatusBadgeClass(string? status)
     {
         return status?.ToLower() switch
         {
@@ -139,8 +168,7 @@ else
         };
     }
 
-    private void OpenInteractionModal()
-    {
-        Console.WriteLine("Open Interaction Modal triggered");
-    }
+    private void OpenEditCustomerModal() => isEditCustomerModalVisible = true;
+    private void OpenInteractionModal() => isInteractionModalVisible = true;
+    private void CloseInteractionModal() => isInteractionModalVisible = false;
 }

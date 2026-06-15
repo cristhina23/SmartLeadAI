@@ -1,61 +1,91 @@
 @inject NavigationManager NavigationManager
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 @using SmartLeadAI.Models
+@using SmartLeadAI.Data
+@using Microsoft.EntityFrameworkCore
 
 <EditForm Model="@currentInteraction" OnValidSubmit="HandleValidSubmit" FormName="CreateInteractionForm">
     <DataAnnotationsValidator/>
-    <ValidationSummary/>
+    <ValidationSummary class="text-danger mb-3" />
     
-    
-
-    <div class="required-label">
-        <label>Type</label>
-        <InputText @bind-Value="currentInteraction.Type" class="form-control" />
+    <div class="form-group mb-3">
+        <label class="form-label required-label">Type</label>
+        <InputSelect @bind-Value="currentInteraction.Type" class="crm-input w-100">
+            <option value="">Select Type...</option>
+            <option value="Call">Phone Call</option>
+            <option value="Email">Email</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Note">Internal Note</option>
+        </InputSelect>
         <ValidationMessage For="() => currentInteraction.Type" />
     </div>
 
-    
-
-    <div class="required-label">
-        <label>Customer Id</label>
-        <InputNumber @bind-Value="currentInteraction.CustomerId" class="form-control" />
-        <ValidationMessage For="() => currentInteraction.CustomerId" />
-    </div>
-
-    <div>
-        <label class="required-label">User Id</label>
-        <InputNumber @bind-Value="currentInteraction.UserId" class="form-control" />
-        <ValidationMessage For="() => currentInteraction.UserId" />
-    </div>
-
-    <div>
-        <label>Notes</label>
-        <InputText @bind-Value="currentInteraction.Notes" class="form-control" />
+    <div class="form-group mb-3">
+        <label class="form-label required-label">Notes</label>
+        <InputTextArea @bind-Value="currentInteraction.Notes" class="crm-input w-100" rows="4" placeholder="What was discussed?" />
         <ValidationMessage For="() => currentInteraction.Notes" />
     </div>
 
-    <div>
-        <label class="required-label">Interaction Date</label>
-        <InputDate @bind-Value="currentInteraction.InteractionDate" class="form-control" />
-        <ValidationMessage For="() => currentInteraction.InteractionDate" />
+    <div class="form-row mb-3">
+        <div class="form-group flex-1">
+            <label class="form-label required-label">Interaction Date</label>
+            <InputDate @bind-Value="currentInteraction.InteractionDate" class="crm-input w-100" />
+            <ValidationMessage For="() => currentInteraction.InteractionDate" />
+        </div>
+
+        <div class="form-group flex-1">
+            <label class="form-label">Next Follow Up</label>
+            <InputDate @bind-Value="currentInteraction.NextFollowUp" class="crm-input w-100" />
+            <ValidationMessage For="() => currentInteraction.NextFollowUp" />
+        </div>
     </div>
 
-    <div>
-        <label>Next Follow Up</label>
-        <InputDate @bind-Value="currentInteraction.NextFollowUp" class="form-control" />
-        <ValidationMessage For="() => currentInteraction.NextFollowUp" />
+    <div class="modal-footer px-0 pb-0">
+        @if (IsRenderedInModal)
+        {
+            <button type="button" class="crm-btn-secondary" @onclick="OnCancelCallback">Cancel</button>
+        }
+        <button type="submit" class="crm-btn-primary">Save Interaction</button>
     </div>
-
-    
-
-    <button type="submit" class="btn btn-primary mt-3">Create Interaction</button>
 </EditForm>
 
 @code {
-    private Interaction currentInteraction = new Interaction();
+    // Structural flags matching your original modal constraints
+    [Parameter] public int CustomerId { get; set; }
+    [Parameter] public bool IsRenderedInModal { get; set; } = false;
+    [Parameter] public EventCallback OnSaveCallback { get; set; }
+    [Parameter] public EventCallback OnCancelCallback { get; set; }
 
-    private void HandleValidSubmit()
+    private Interaction currentInteraction = new();
+
+    protected override void OnParametersSet()
     {
-        Console.WriteLine($"Saving data for Interaction created at: {DateTime.Now}");
-        NavigationManager.NavigateTo("/");
+        // Automatically default base data context constraints on load
+        currentInteraction.InteractionDate = DateTime.Now;
+        if (CustomerId > 0)
+        {
+            currentInteraction.CustomerId = CustomerId;
+            // TODO: Fallback to active system security principal ID or context state
+            currentInteraction.UserId = 1; 
+        }
     }
-}       
+
+    private async Task HandleValidSubmit()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        
+        context.Interactions.Add(currentInteraction);
+        await context.SaveChangesAsync();
+
+        if (IsRenderedInModal)
+        {
+            // Trigger refresh event callback locally
+            await OnSaveCallback.InvokeAsync();
+        }
+        else
+        {
+            // Route backwards if they used the standalone page path
+            NavigationManager.NavigateTo($"/customers/{currentInteraction.CustomerId}");
+        }
+    }
+}

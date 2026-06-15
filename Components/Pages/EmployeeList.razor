@@ -3,13 +3,18 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
 @using SmartLeadAI.Models
+@using SmartLeadAI.Data 
+
+@inject IDbContextFactory<SmartLeadContext> DbFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>Employees - Smart Lead AI</PageTitle>
 
 <div class="page-header mt-4 mb-4">
     <h1 class="page-title">Employee Management</h1>
-    <button class="crm-btn-primary" @onclick="OpenAddModal">+ Add Employee</button>
+    <button class="crm-btn-primary" @onclick="NavigateToCreate">+ Add Employee</button>
 </div>
 
 <div class="crm-card table-responsive">
@@ -24,10 +29,18 @@
             </tr>
         </thead>
         <tbody>
-            @if (employees == null || !employees.Any())
+            @if (employees == null)
             {
                 <tr>
-                    <td colspan="5" class="text-center empty-state">No employees found.</td>
+                    <td colspan="5" class="text-center empty-state">
+                        <span class="loading-spinner">Loading employees from database...</span>
+                    </td>
+                </tr>
+            }
+            else if (!employees.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center empty-state">No employees found in the system.</td>
                 </tr>
             }
             else
@@ -53,24 +66,27 @@
     </table>
 </div>
 
-<EditEmployeeModal @bind-IsVisible="isEditModalVisible" Employee="selectedEmployee" />
+
+<EditEmployeeModal @bind-IsVisible="isEditModalVisible" Employee="selectedEmployee" OnSaveCallback="ReloadEmployees" />
 
 @code {
     private bool isEditModalVisible = false;
     private User selectedEmployee = new();
-    private List<User> employees = new();
+    private List<User> employees = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        // === MOCK DATA FOR UI TESTING ===
-        await Task.Delay(200); // network latency simulation
+        await ReloadEmployees();
+    }
 
-        employees = new List<User>
-        {
-            new User { Id = 1, CompanyId = 1, FullName = "Alex Johnson", Email = "alex@smartlead.com", Role = "Employee", IsActive = true },
-            new User { Id = 2, CompanyId = 1, FullName = "Admin User", Email = "admin@smartlead.com", Role = "Admin", IsActive = true },
-            new User { Id = 3, CompanyId = 1, FullName = "Elena Rostova", Email = "elena@smartlead.com", Role = "Employee", IsActive = false }
-        };
+    private async Task ReloadEmployees()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        
+        employees = await context.Users
+            .AsNoTracking()
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
     }
 
     private void OpenEditModal(User employee)
@@ -79,9 +95,8 @@
         isEditModalVisible = true;
     }
 
-    private void OpenAddModal()
+    private void NavigateToCreate()
     {
-        selectedEmployee = new User(); // Initialize blank model for additions
-        isEditModalVisible = true;
+        NavigationManager.NavigateTo("/users/create");
     }
 }

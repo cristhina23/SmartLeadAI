@@ -1,27 +1,33 @@
-﻿<div class="sidebar-container">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject SmartLeadAI.Data.SmartLeadContext DbContext
+@inject IJSRuntime JS
+@using Microsoft.EntityFrameworkCore
+
+<div class="sidebar-container">
     <nav class="nav-menu">
         <div class="nav-item">
-            <NavLink class="nav-link" href="/dashboard" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All" @onclick="HandleLinkClick">
                 <i class="bi bi-house-door-fill"></i> <span>Dashboard</span>
             </NavLink>
         </div>
         <div class="nav-item">
-            <NavLink class="nav-link" href="/customers">
+            <NavLink class="nav-link" href="customers" @onclick="HandleLinkClick">
                 <i class="bi bi-people-fill"></i> <span>Customers</span>
             </NavLink>
         </div>
         <div class="nav-item">
-            <NavLink class="nav-link" href="/employees">
+            <NavLink class="nav-link" href="employees" @onclick="HandleLinkClick">
                 <i class="bi bi-person-badge-fill"></i> <span>Employees</span>
             </NavLink>
         </div>
         <div class="nav-item">
-            <NavLink class="nav-link" href="/interactions">
+            <NavLink class="nav-link" href="interactions" @onclick="HandleLinkClick">
                 <i class="bi bi-chat-left-dots-fill"></i> <span>Interactions</span>
             </NavLink>
         </div>
         <div class="nav-item">
-            <NavLink class="nav-link" href="/followups">
+            <NavLink class="nav-link" href="followups" @onclick="HandleLinkClick">
                 <i class="bi bi-calendar-check-fill"></i> <span>Follow-ups</span>
             </NavLink>
         </div>
@@ -29,27 +35,77 @@
         <div class="nav-divider"></div>
 
         <div class="nav-item">
-            <NavLink class="nav-link" href="/reports">
+            <NavLink class="nav-link" href="reports" @onclick="HandleLinkClick">
                 <i class="bi bi-bar-chart-fill"></i> <span>Reports</span>
             </NavLink>
         </div>
         <div class="nav-item">
-            <NavLink class="nav-link" href="/settings">
+            <NavLink class="nav-link" href="settings" @onclick="HandleLinkClick">
                 <i class="bi bi-gear-fill"></i> <span>Settings</span>
             </NavLink>
         </div>
     </nav>
 
-    <div class="sidebar-footer">
-        <div class="company-badge">
-            <div class="building-icon">
-                <i class="bi bi-building"></i>
-            </div>
-            <div class="company-details">
-                <span class="company-name">Acme Company</span>
-                <span class="user-role">Admin</span>
-            </div>
-            <i class="bi bi-chevron-down ms-auto" style="color: #94A3B8; font-size: 0.8rem;"></i>
-        </div>
+    <div class="sidebar-footer" style="cursor: pointer;">
+        <form method="post" action="/signout" id="logoutForm" class="w-100">
+            <AntiforgeryToken />
+            <button type="submit" class="btn w-100 text-start p-0 border-0" style="background: none; color: inherit;">
+                <div class="company-badge d-flex align-items-center">
+                    <div class="building-icon me-2">
+                        <i class="bi bi-box-arrow-left text-danger" style="font-size: 1.2rem;" title="Click to Sign Out"></i>
+                    </div>
+                    
+                    <div class="company-details flex-grow-1" style="color: #FFFFFF !important;">
+                        <span class="company-name d-block text-truncate fw-bold" style="max-width: 160px; color: #FFFFFF !important;">@UserFullName</span>
+                        <span class="user-role d-block small" style="max-width: 160px; color: rgba(255, 255, 255, 0.7) !important;">@UserRole</span>
+                    </div>
+                    <i class="bi bi-power ms-auto text-light small" title="Log Out"></i>
+                </div>
+            </button>
+        </form>
     </div>
 </div>
+
+@code {
+    [Parameter] public EventCallback OnNavigate { get; set; }
+    
+    private string UserFullName { get; set; } = "Active User";
+    private string UserRole { get; set; } = "Employee";
+
+    private async Task HandleLinkClick()
+    {
+        // Check window width via JavaScript to only trigger collapse on mobile
+        var width = await JS.InvokeAsync<int>("eval", "window.innerWidth");
+        if (width <= 768)
+        {
+            await OnNavigate.InvokeAsync();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userPrincipal = authState.User;
+
+        if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
+        {
+            var userEmail = userPrincipal.Identity.Name ?? string.Empty;
+            UserRole = userPrincipal.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "Employee";
+
+            try
+            {
+                var activeUserRecord = await DbContext.Users
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == userEmail.ToLower());
+
+                if (activeUserRecord != null)
+                {
+                    UserFullName = activeUserRecord.FullName;
+                }
+            }
+            catch
+            {
+                UserFullName = "Admin User";
+            }
+        }
+    }
+}

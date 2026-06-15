@@ -5,17 +5,22 @@
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow-lg border-0 rounded-3 p-4" style="width: 100%; max-width: 420px;">
         
-        <!-- Branding Header -->
         <div class="text-center mb-4">
             <h2 class="fw-bold text-primary">SmartLeadAI</h2>
             <p class="text-muted">Sign in to manage your pipeline</p>
         </div>
 
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger text-center small py-2 mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> @ErrorMessage
+            </div>
+        }
+
         <form method="post" action="/signin">
             <AntiforgeryToken />
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
 
-            <!-- Email Field -->
             <div class="mb-3">
                 <label for="email" class="form-label fw-semibold">Email Address</label>
                 <div class="input-group">
@@ -30,7 +35,6 @@
                 </div>
             </div>
 
-            <!-- Password Field -->
             <div class="mb-3">
                 <div class="d-flex justify-content-between">
                     <label for="password" class="form-label fw-semibold">Password</label>
@@ -48,7 +52,6 @@
                 </div>
             </div>
 
-            <!-- Remember Me Checkbox -->
             <div class="mb-4 form-check">
                 <input id="rememberMe" name="RememberMe" type="checkbox" class="form-check-input" />
                 <label class="form-check-label text-muted small" for="rememberMe">
@@ -56,7 +59,6 @@
                 </label>
             </div>
 
-            <!-- Submit Button -->
             <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
                 Sign In
             </button>
@@ -67,15 +69,19 @@
 
 @code {
     private string? ReturnUrl { get; set; }
+    private string? ErrorMessage { get; set; }
 
     protected override void OnInitialized()
     {
-        var uri = new Uri(NavigationManager.Uri);
+        var uri = new Uri(NavManager.Uri);
         var query = QueryHelpers.ParseQuery(uri.Query);
+        
         query.TryGetValue("ReturnUrl", out var returnUrl);
-        ReturnUrl = returnUrl.FirstOrDefault();
-    }
+        ReturnUrl = returnUrl.FirstOrDefault() ?? "/dashboard";
 
-    [Inject]
-    NavigationManager NavigationManager { get; set; } = null!;
+        if (query.TryGetValue("error", out var errorMsg))
+        {
+            ErrorMessage = errorMsg.FirstOrDefault();
+        }
+    }
 }

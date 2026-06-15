@@ -1,37 +1,105 @@
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject AuthenticationStateProvider AuthStateProvider
+@inject SmartLeadAI.Data.SmartLeadContext DbContext
 
-<div class="app-layout">
-    <aside class="sidebar-container">
-        <div class="logo-header">
-            <img src="images/smartlead-logo.png" alt="SmartLead AI" class="brand-logo" />
-        </div>
-        <div class="sidebar-content">
-            <NavMenu />
-        </div>
-    </aside>
+<AuthorizeView>
+    <Authorized>
+        @* The app-layout class switches based on the isSidebarCollapsed state *@
+        <div class="app-layout @(isSidebarCollapsed ? "sidebar-collapsed" : "")">
+            
+            @* Mobile Backdrop: Only rendered when sidebar is open on mobile *@
+            @if (isSidebarCollapsed)
+            {
+                <div class="sidebar-backdrop" @onclick="ToggleSidebar"></div>
+            }
 
-    <div class="main-wrapper">
-        <header class="top-navbar">
-            <div class="search-bar">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" placeholder="Search anything..." class="search-input" />
-            </div>
-
-            <div class="user-profile">
-                <div class="notification-wrapper">
-                    <i class="bi bi-bell notification-icon"></i>
-                    <span class="notification-badge">3</span>
+            <aside class="sidebar-container">
+                <div class="logo-header">
+                    <img src="images/smartlead-logo.png" alt="SmartLead AI" class="brand-logo" />
                 </div>
-                <img src="images/avatar.png" alt="Admin" class="avatar" />
-                <div class="user-info">
-                    <span class="user-greeting">Welcome, Admin</span>
-                    <span class="user-company">Acme Company <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i></span>
+                <div class="sidebar-content">
+                    <NavMenu OnNavigate="ToggleSidebar" />
                 </div>
-            </div>
-        </header>
+            </aside>
 
-        <main class="content-area">
+            <div class="main-wrapper">
+                <header class="top-navbar">
+                    <button class="sidebar-toggle" @onclick="ToggleSidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <div class="search-bar">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" placeholder="Search anything..." class="search-input" />
+                    </div>
+
+                    <div class="user-profile">
+                        <div class="notification-wrapper">
+                            <i class="bi bi-bell notification-icon"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                        <img src="images/avatar.png" alt="Profile" class="avatar" />
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome, @UserFullName</span>
+                            <span class="user-company">@CompanyName</span>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="content-area">
+                    @Body
+                </main>
+            </div>
+        </div>
+    </Authorized>
+    
+    <NotAuthorized>
+        <main class="public-content-wrapper">
             @Body
         </main>
-    </div>
-</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool isSidebarCollapsed = false;
+    private string UserFullName { get; set; } = "User";
+    private string CompanyName { get; set; } = "SmartLead Tenant";
+
+    private void ToggleSidebar() 
+    {
+        isSidebarCollapsed = !isSidebarCollapsed;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userPrincipal = authState.User;
+
+        if (userPrincipal.Identity?.IsAuthenticated == true)
+        {
+            var email = userPrincipal.Identity.Name;
+            if (!string.IsNullOrEmpty(email))
+            {
+                try
+                {
+                    var dbUser = await DbContext.Users
+                        .Include(u => u.Company)
+                        .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+                    if (dbUser != null)
+                    {
+                        UserFullName = dbUser.FullName;
+                        CompanyName = dbUser.Company?.Name ?? "SmartLead AI";
+                    }
+                }
+                catch
+                {
+                    UserFullName = "Admin";
+                    CompanyName = "Local Development";
+                }
+            }
+        }
+    }
+}

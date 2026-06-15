@@ -12,3 +12,13 @@
 # User-specific
 *.user
 *.suo
+
+# SQLite database files
+*.db-shm
+*.db-wal
+
+# NuGet packages
+*.nuget.props
+*.nuget.targets
+project.assets.json
+*.csproj.lscache

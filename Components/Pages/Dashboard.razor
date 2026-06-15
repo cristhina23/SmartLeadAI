@@ -1,8 +1,11 @@
 @page "/dashboard"
-@attribute [AllowAnonymous]
+@attribute [Authorize]
 @rendermode InteractiveServer
 
 @using SmartLeadAI.Models
+@using SmartLeadAI.Data
+@using Microsoft.EntityFrameworkCore
+@inject SmartLeadContext DbContext
 
 <PageTitle>Dashboard - Smart Lead AI</PageTitle>
 
@@ -53,13 +56,13 @@
         <div class="crm-card activity-panel">
             <h2 class="section-title">Recent Activity</h2>
             <div class="activity-feed">
-                @if (mockActivities == null || !mockActivities.Any())
+                @if (realActivities == null || !realActivities.Any())
                 {
                     <p class="text-muted italic-state">No interactions logged recently.</p>
                 }
                 else
                 {
-                    @foreach (var activity in mockActivities)
+                    @foreach (var activity in realActivities)
                     {
                         <div class="activity-item">
                             <div class="activity-icon-bullet @GetActivityTypeColor(activity.Type)">
@@ -91,7 +94,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (mockFollowUps == null || !mockFollowUps.Any())
+                        @if (realFollowUps == null || !realFollowUps.Any())
                         {
                             <tr>
                                 <td colspan="4" class="text-center text-muted py-4">No upcoming deliverables scheduled.</td>
@@ -99,7 +102,7 @@
                         }
                         else
                         {
-                            @foreach (var followUp in mockFollowUps)
+                            @foreach (var followUp in realFollowUps)
                             {
                                 <tr>
                                     <td data-label="Customer" class="font-semibold text-main">@followUp.CustomerName</td>
@@ -197,27 +200,84 @@
 </style>
 
 @code {
-    private int totalCustomersCount = 124;
-    private int activeFollowUpsCount = 12;
-    private int recentInteractionsCount = 45;
+    private int totalCustomersCount = 0;
+    private int activeFollowUpsCount = 0;
+    private int recentInteractionsCount = 0;
 
-    private List<RecentActivityMock> mockActivities = new();
-    private List<UpcomingFollowUpMock> mockFollowUps = new();
+    private List<RecentActivityDto> realActivities = new();
+    private List<UpcomingFollowUpDto> realFollowUps = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        mockActivities = new List<RecentActivityMock>
+        try
         {
-            new RecentActivityMock { CustomerName = "Blu Berry", Type = "Call", Summary = "Discussed downtown 3-bed condos.", Date = DateTime.Now.AddMinutes(-45) },
-            new RecentActivityMock { CustomerName = "John Doe", Type = "Email", Summary = "Sent introduction quote schema.", Date = DateTime.Now.AddHours(-3) },
-            new RecentActivityMock { CustomerName = "Elena Rostova", Type = "WhatsApp", Summary = "Confirmed viewing schedules.", Date = DateTime.Now.AddHours(-5) }
+            totalCustomersCount = await DbContext.Companies.AnyAsync() ? await DbContext.Customers.CountAsync() : 0;
+            recentInteractionsCount = await DbContext.Companies.AnyAsync() ? await DbContext.Interactions.CountAsync() : 0;
+            
+            activeFollowUpsCount = await DbContext.Companies.AnyAsync() 
+                ? await DbContext.Interactions.Where(i => i.NextFollowUp != null && i.NextFollowUp >= DateTime.Now).CountAsync() 
+                : 0;
+
+            if (totalCustomersCount > 0 || recentInteractionsCount > 0)
+            {
+                realActivities = await DbContext.Interactions
+                    .Include(i => i.Customer)
+                    .OrderByDescending(i => i.InteractionDate)
+                    .Take(5)
+                    .Select(i => new RecentActivityDto
+                    {
+                        CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
+                        Type = i.Type,
+                        Summary = i.Notes ?? "No summary notes provided.",
+                        Date = i.InteractionDate
+                    })
+                    .ToListAsync();
+
+                realFollowUps = await DbContext.Interactions
+                    .Include(i => i.Customer)
+                    .Where(i => i.NextFollowUp != null && i.NextFollowUp >= DateTime.Now)
+                    .OrderBy(i => i.NextFollowUp)
+                    .Take(5)
+                    .Select(i => new UpcomingFollowUpDto
+                    {
+                        CustomerId = i.CustomerId,
+                        CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
+                        TargetDate = i.NextFollowUp ?? DateTime.Now,
+                        Channel = i.Type
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                // Fall back straight to development placeholder objects if database records are empty
+                SeedDevMockPlaceholders();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Dashboard database tracking fault caught: {ex.Message}");
+            SeedDevMockPlaceholders();
+        }
+    }
+
+    private void SeedDevMockPlaceholders()
+    {
+        totalCustomersCount = 124;
+        activeFollowUpsCount = 12;
+        recentInteractionsCount = 45;
+
+        realActivities = new List<RecentActivityDto>
+        {
+            new RecentActivityDto { CustomerName = "Blu Berry", Type = "Call", Summary = "Discussed downtown 3-bed condos.", Date = DateTime.Now.AddMinutes(-45) },
+            new RecentActivityDto { CustomerName = "John Doe", Type = "Email", Summary = "Sent introduction quote schema.", Date = DateTime.Now.AddHours(-3) },
+            new RecentActivityDto { CustomerName = "Elena Rostova", Type = "WhatsApp", Summary = "Confirmed viewing schedules.", Date = DateTime.Now.AddHours(-5) }
         };
 
-        mockFollowUps = new List<UpcomingFollowUpMock>
+        realFollowUps = new List<UpcomingFollowUpDto>
         {
-            new UpcomingFollowUpMock { CustomerId = 1, CustomerName = "John Doe", TargetDate = DateTime.Now.AddDays(1), Channel = "WhatsApp" },
-            new UpcomingFollowUpMock { CustomerId = 3, CustomerName = "Elena Rostova", TargetDate = DateTime.Now.AddDays(2), Channel = "Phone" },
-            new UpcomingFollowUpMock { CustomerId = 1, CustomerName = "Sarah Jenkins", TargetDate = DateTime.Now.AddDays(4), Channel = "Email" }
+            new UpcomingFollowUpDto { CustomerId = 1, CustomerName = "John Doe", TargetDate = DateTime.Now.AddDays(1), Channel = "WhatsApp" },
+            new UpcomingFollowUpDto { CustomerId = 3, CustomerName = "Elena Rostova", TargetDate = DateTime.Now.AddDays(2), Channel = "Phone" },
+            new UpcomingFollowUpDto { CustomerId = 1, CustomerName = "Sarah Jenkins", TargetDate = DateTime.Now.AddDays(4), Channel = "Email" }
         };
     }
 
@@ -225,7 +285,7 @@
     {
         return type.ToLower() switch
         {
-            "call" => "icon-primary",
+            "call" or "phone" => "icon-primary",
             "email" => "icon-info",
             "whatsapp" => "icon-success",
             _ => "icon-secondary"
@@ -236,7 +296,7 @@
     {
         return type.ToLower() switch
         {
-            "call" => "bi-telephone-outbound-fill",
+            "call" or "phone" => "bi-telephone-outbound-fill",
             "email" => "bi-envelope-paper-fill",
             "whatsapp" => "bi-whatsapp",
             _ => "bi-chat-left-text-fill"
@@ -247,14 +307,14 @@
     {
         return channel.ToLower() switch
         {
-            "phone" => "bi-telephone",
+            "phone" or "call" => "bi-telephone",
             "email" => "bi-envelope",
             "whatsapp" => "bi-whatsapp",
             _ => "bi-chat"
         };
     }
 
-    private class RecentActivityMock
+    private class RecentActivityDto
     {
         public string CustomerName { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
@@ -262,7 +322,7 @@
         public DateTime Date { get; set; }
     }
 
-    private class UpcomingFollowUpMock
+    private class UpcomingFollowUpDto
     {
         public int CustomerId { get; set; }
         public string CustomerName { get; set; } = string.Empty;

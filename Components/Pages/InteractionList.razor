@@ -1,0 +1,107 @@
+@page "/interactions"
+@using SmartLeadAI.Models
+@using SmartLeadAI.Services
+@inject InteractionService InteractionService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Interactions</h1>
+    <a href="/interactions/create" class="crm-btn-primary text-decoration-none">+ Add New Interaction</a>
+</div>
+
+<div class="crm-card table-responsive">
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Summary</th>
+                <th>Next Follow-Up</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (interactions == null)
+            {
+                <tr>
+                    <td colspan="6" class="text-center empty-state">
+                        <span class="loading-spinner">Loading interactions from database...</span>
+                    </td>
+                </tr>
+            }
+            else if (!interactions.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center empty-state">No interactions found.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var interaction in interactions)
+                {
+                    <tr>
+                        <td>@interaction.InteractionDate.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>@(interaction.Customer?.FullName ?? "Unknown")</td>
+                        <td>
+                            <span class="crm-badge crm-badge-info">@interaction.Type</span>
+                        </td>
+                        <td class="text-truncate" style="max-width: 250px;" title="@interaction.Notes">
+                            @interaction.Notes
+                        </td>
+                        <td>
+                            @(interaction.NextFollowUp?.ToString("MMM dd, yyyy") ?? "None")
+                        </td>
+                        <td class="text-center" style="display:flex; justify-content:center; gap:0.5rem; border-bottom: none;">
+                            <!-- Details Button -->
+                            <button class="crm-btn-secondary text-decoration-none" @onclick="() => ShowDetails(interaction.Id)" title="View Details">
+                                Details
+                            </button>
+                            
+                            <!-- Edit Button -->
+                            <button class="crm-btn-secondary text-decoration-none" @onclick="() => EditInteraction(interaction.Id)" title="Edit">
+                                Edit
+                            </button>
+                            
+                            <!-- Delete Button -->
+                            <button class="crm-btn-secondary text-decoration-none" style="color: var(--clr-danger); border-color: var(--clr-danger);" @onclick="() => DeleteInteraction(interaction.Id)" title="Delete">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Interaction>? interactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInteractions();
+    }
+
+    private async Task LoadInteractions()
+    {
+        // Fetches the list using the service we created earlier
+        interactions = await InteractionService.GetAllInteractionsAsync();
+    }
+
+    private void ShowDetails(int id)
+    {
+        NavigationManager.NavigateTo($"/interactions/details/{id}");
+    }
+
+    private void EditInteraction(int id)
+    {
+        NavigationManager.NavigateTo($"/interactions/edit/{id}");
+    }
+
+    private void DeleteInteraction(int id)
+    {
+        NavigationManager.NavigateTo($"/interactions/delete/{id}");
+    }
+}

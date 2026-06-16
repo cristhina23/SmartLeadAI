@@ -12,9 +12,8 @@ public class CustomAuthenticationHandler : AuthenticationHandler<AuthenticationS
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ISystemClock clock,
         AuthenticationStateProvider authenticationStateProvider)
-        : base(options, logger, encoder, clock)
+        : base(options, logger, encoder)
     {
         _authenticationStateProvider = authenticationStateProvider;
     }

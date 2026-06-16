@@ -1,0 +1,17 @@
+@page "/interactions/edit/{Id:int}"
+@using SmartLeadAI.Components
+@attribute [Authorize]
+
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Edit Interaction</h1>
+    <a href="/interactions" class="crm-btn-secondary text-decoration-none">Back to List</a>
+</div>
+
+<div class="crm-card p-4">
+    <CreateInteractionForm InteractionId="Id" />
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+}

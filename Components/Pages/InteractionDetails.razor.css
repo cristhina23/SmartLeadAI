@@ -1,0 +1,44 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--clr-text);
+}
+
+dt {
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+dd {
+    margin: 0;
+    color: var(--clr-text);
+    font-weight: 500;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Notes box style */
+dd:last-of-type {
+    line-height: 1.5;
+    background-color: var(--clr-background);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--clr-border);
+    display: block;
+}

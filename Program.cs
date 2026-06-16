@@ -44,6 +44,7 @@ builder.Services.AddScoped<SmartLeadContext>(p =>
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<InteractionService>();
 
 var app = builder.Build();
 

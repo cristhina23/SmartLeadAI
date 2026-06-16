@@ -1,0 +1,51 @@
+@page "/interactions/details/{Id:int}"
+@using SmartLeadAI.Services
+@using SmartLeadAI.Models
+@inject InteractionService InteractionService
+@attribute [Authorize]
+
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Interaction Details</h1>
+    <a href="/interactions" class="crm-btn-secondary text-decoration-none">Back to List</a>
+</div>
+
+<div class="crm-card p-4">
+    @if (interaction == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-3 mb-3">Date</dt>
+            <dd class="col-sm-9 mb-3">@interaction.InteractionDate.ToString("MMM dd, yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3 mb-3">Customer</dt>
+            <dd class="col-sm-9 mb-3">@(interaction.Customer?.FullName ?? "Unknown")</dd>
+
+            <dt class="col-sm-3 mb-3">Assigned User</dt>
+            <dd class="col-sm-9 mb-3">@(interaction.User?.FullName ?? "Unknown")</dd>
+
+            <dt class="col-sm-3 mb-3">Type</dt>
+            <dd class="col-sm-9 mb-3"><span class="crm-badge crm-badge-info">@interaction.Type</span></dd>
+
+            <dt class="col-sm-3 mb-3">Next Follow-Up</dt>
+            <dd class="col-sm-9 mb-3">@(interaction.NextFollowUp?.ToString("MMM dd, yyyy") ?? "None")</dd>
+
+            <dt class="col-sm-3 mb-3">Notes</dt>
+            <dd class="col-sm-9 mb-3">@interaction.Notes</dd>
+        </dl>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Interaction? interaction;
+
+    protected override async Task OnInitializedAsync()
+    {
+        interaction = await InteractionService.GetInteractionByIdAsync(Id);
+    }
+}

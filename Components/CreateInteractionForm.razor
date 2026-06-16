@@ -4,10 +4,38 @@
 @using SmartLeadAI.Data
 @using Microsoft.EntityFrameworkCore
 
+
 <EditForm Model="@currentInteraction" OnValidSubmit="HandleValidSubmit" FormName="CreateInteractionForm">
     <DataAnnotationsValidator/>
     <ValidationSummary class="text-danger mb-3" />
     
+    @if (CustomerId == 0)
+    {
+        <div class="form-group mb-3">
+            <label class="form-label required-label">Customer</label>
+            <InputSelect @bind-Value="currentInteraction.CustomerId" class="crm-input w-100">
+                <option value="0">Select a Customer...</option>
+                @foreach (var c in customers)
+                {
+                    <option value="@c.Id">@c.FullName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => currentInteraction.CustomerId" />
+        </div>
+    }
+
+    <div class="form-group mb-3">
+        <label class="form-label required-label">Assigned User</label>
+        <InputSelect @bind-Value="currentInteraction.UserId" class="crm-input w-100">
+            <option value="0">Select a User...</option>
+            @foreach (var u in users)
+            {
+                <option value="@u.Id">@u.FullName</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => currentInteraction.UserId" />
+    </div>
+
     <div class="form-group mb-3">
         <label class="form-label required-label">Type</label>
         <InputSelect @bind-Value="currentInteraction.Type" class="crm-input w-100">
@@ -26,21 +54,21 @@
         <ValidationMessage For="() => currentInteraction.Notes" />
     </div>
 
-    <div class="form-row mb-3">
-        <div class="form-group flex-1">
+    <div class="form-row mb-3" style="display:flex; gap:1rem;">
+        <div class="form-group flex-1" style="flex:1;">
             <label class="form-label required-label">Interaction Date</label>
             <InputDate @bind-Value="currentInteraction.InteractionDate" class="crm-input w-100" />
             <ValidationMessage For="() => currentInteraction.InteractionDate" />
         </div>
 
-        <div class="form-group flex-1">
+        <div class="form-group flex-1" style="flex:1;">
             <label class="form-label">Next Follow Up</label>
             <InputDate @bind-Value="currentInteraction.NextFollowUp" class="crm-input w-100" />
             <ValidationMessage For="() => currentInteraction.NextFollowUp" />
         </div>
     </div>
 
-    <div class="modal-footer px-0 pb-0">
+    <div class="modal-footer px-0 pb-0 mt-4">
         @if (IsRenderedInModal)
         {
             <button type="button" class="crm-btn-secondary" @onclick="OnCancelCallback">Cancel</button>
@@ -52,29 +80,68 @@
 @code {
     // Structural flags matching your original modal constraints
     [Parameter] public int CustomerId { get; set; }
+    [Parameter] public int InteractionId { get; set; }
     [Parameter] public bool IsRenderedInModal { get; set; } = false;
     [Parameter] public EventCallback OnSaveCallback { get; set; }
     [Parameter] public EventCallback OnCancelCallback { get; set; }
 
     private Interaction currentInteraction = new();
+    private List<Customer> customers = new();
+    private List<User> users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        customers = await context.Customers.AsNoTracking().ToListAsync();
+        users = await context.Users.AsNoTracking().ToListAsync();
+        
+        if (InteractionId > 0)
+        {
+            var existing = await context.Interactions.FirstOrDefaultAsync(i => i.Id == InteractionId);
+            if (existing != null)
+            {
+                currentInteraction = existing;
+            }
+        }
+        else
+        {
+            currentInteraction.InteractionDate = DateTime.Now;
+
+            // If we only have one user, default to it
+            if (users.Count == 1 && currentInteraction.UserId == 0)
+            {
+                currentInteraction.UserId = users.First().Id;
+            }
+        }
+    }
 
     protected override void OnParametersSet()
     {
-        // Automatically default base data context constraints on load
-        currentInteraction.InteractionDate = DateTime.Now;
-        if (CustomerId > 0)
+        if (CustomerId > 0 && InteractionId == 0)
         {
             currentInteraction.CustomerId = CustomerId;
-            // TODO: Fallback to active system security principal ID or context state
-            currentInteraction.UserId = 1; 
         }
     }
 
     private async Task HandleValidSubmit()
     {
+        if (currentInteraction.CustomerId == 0 || currentInteraction.UserId == 0)
+        {
+            // Do not submit if CustomerId or UserId is 0
+            return;
+        }
+
         using var context = await DbFactory.CreateDbContextAsync();
         
-        context.Interactions.Add(currentInteraction);
+        if (InteractionId > 0)
+        {
+            context.Interactions.Update(currentInteraction);
+        }
+        else
+        {
+            context.Interactions.Add(currentInteraction);
+        }
+        
         await context.SaveChangesAsync();
 
         if (IsRenderedInModal)
@@ -84,8 +151,8 @@
         }
         else
         {
-            // Route backwards if they used the standalone page path
-            NavigationManager.NavigateTo($"/customers/{currentInteraction.CustomerId}");
+            // Route backwards to list
+            NavigationManager.NavigateTo("/interactions");
         }
     }
 }

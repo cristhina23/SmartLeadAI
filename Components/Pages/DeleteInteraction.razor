@@ -1,0 +1,62 @@
+@page "/interactions/delete/{Id:int}"
+@using SmartLeadAI.Services
+@using SmartLeadAI.Models
+@inject InteractionService InteractionService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<div class="page-header mt-4 mb-4">
+    <h1 class="page-title">Delete Interaction</h1>
+    <a href="/interactions" class="crm-btn-secondary text-decoration-none">Back to List</a>
+</div>
+
+<div class="crm-card p-4">
+    @if (interaction == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <h3 class="text-danger mb-4">Are you sure you want to delete this interaction?</h3>
+        
+        <dl class="row mb-4">
+            <dt class="col-sm-3 mb-2">Date</dt>
+            <dd class="col-sm-9 mb-2">@interaction.InteractionDate.ToString("MMM dd, yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3 mb-2">Customer</dt>
+            <dd class="col-sm-9 mb-2">@(interaction.Customer?.FullName ?? "Unknown")</dd>
+
+            <dt class="col-sm-3 mb-2">Type</dt>
+            <dd class="col-sm-9 mb-2"><span class="crm-badge crm-badge-info">@interaction.Type</span></dd>
+
+            <dt class="col-sm-3 mb-2">Notes</dt>
+            <dd class="col-sm-9 mb-2">@interaction.Notes</dd>
+        </dl>
+
+        <div class="mt-4">
+            <button class="btn btn-danger" @onclick="ConfirmDelete">Yes, Delete Interaction</button>
+            <a href="/interactions" class="crm-btn-secondary text-decoration-none" style="margin-left: 0.5rem;">Cancel</a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Interaction? interaction;
+
+    protected override async Task OnInitializedAsync()
+    {
+        interaction = await InteractionService.GetInteractionByIdAsync(Id);
+    }
+
+    private async Task ConfirmDelete()
+    {
+        var success = await InteractionService.DeleteInteractionAsync(Id);
+        if (success)
+        {
+            NavigationManager.NavigateTo("/interactions");
+        }
+    }
+}

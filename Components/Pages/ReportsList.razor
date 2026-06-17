@@ -1,0 +1,185 @@
+@page "/reports"
+
+@using Microsoft.EntityFrameworkCore
+@using SmartLeadAI.Data
+
+@inject SmartLeadContext DbContext
+
+<PageTitle>Reports</PageTitle>
+
+<h1 class="reports-title">Reports</h1>
+
+<div class="reports-container">
+
+
+<div class="report-card customers-card">
+    <div class="report-icon">
+        <i class="bi bi-people-fill"></i>
+    </div>
+
+    <div>
+        <p class="report-label">Total Customers</p>
+        <h2>@totalCustomers</h2>
+    </div>
+</div>
+
+<div class="report-card employees-card">
+    <div class="report-icon">
+        <i class="bi bi-person-badge-fill"></i>
+    </div>
+
+    <div>
+        <p class="report-label">Total Employees</p>
+        <h2>@totalEmployees</h2>
+    </div>
+</div>
+
+<div class="report-card interactions-card">
+    <div class="report-icon">
+        <i class="bi bi-chat-left-text-fill"></i>
+    </div>
+
+    <div>
+        <p class="report-label">Total Interactions</p>
+        <h2>@totalInteractions</h2>
+    </div>
+</div>
+
+<div class="report-card followups-card">
+    <div class="report-icon">
+        <i class="bi bi-calendar-check-fill"></i>
+    </div>
+
+    <div>
+        <p class="report-label">Scheduled Follow-Ups</p>
+        <h2>@totalFollowUps</h2>
+    </div>
+</div>
+
+
+</div>
+
+@code {
+
+private int totalCustomers;
+private int totalEmployees;
+private int totalInteractions;
+private int totalFollowUps;
+
+protected override async Task OnInitializedAsync()
+{
+    totalCustomers = await DbContext.Customers.CountAsync();
+    totalEmployees = await DbContext.Users.CountAsync();
+    totalInteractions = await DbContext.Interactions.CountAsync();
+
+    totalFollowUps = await DbContext.Interactions
+        .CountAsync(i => i.NextFollowUp != null);
+}
+
+
+}
+
+<style>
+
+    .reports-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--clr-text);
+        margin-bottom: 2rem;
+    }
+
+    .reports-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .report-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+
+        border: 1px solid #e5e7eb;
+
+        box-shadow: 0 10px 25px rgba(0,0,0,.05);
+
+        transition: all .3s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 35px rgba(0,0,0,.10);
+    }
+
+    .report-icon {
+        width: 70px;
+        height: 70px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 18px;
+
+        color: white;
+        font-size: 1.8rem;
+
+        flex-shrink: 0;
+    }
+
+    .customers-card .report-icon {
+        background: linear-gradient(135deg, #2563EB, #3B82F6);
+    }
+
+    .employees-card .report-icon {
+        background: linear-gradient(135deg, #10B981, #34D399);
+    }
+
+    .interactions-card .report-icon {
+        background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+    }
+
+    .followups-card .report-icon {
+        background: linear-gradient(135deg, #F59E0B, #FBBF24);
+    }
+
+    .report-label {
+        margin: 0;
+        color: #64748B;
+        font-weight: 600;
+        font-size: .95rem;
+    }
+
+    .report-card h2 {
+        margin-top: .35rem;
+        margin-bottom: 0;
+
+        font-size: 3rem;
+        font-weight: 800;
+        color: #0F172A;
+    }
+
+    @@media (max-width: 768px) {
+
+        .reports-container {
+            grid-template-columns: 1fr;
+        }
+
+        .reports-title {
+            font-size: 2.2rem;
+        }
+
+        .report-card {
+            padding: 1.5rem;
+        }
+
+        .report-card h2 {
+            font-size: 2.5rem;
+        }
+    }
+
+</style>

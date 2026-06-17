@@ -262,3 +262,24 @@ p {
     width: 260px;
   }
 }
+
+/* --- Modal Scrollability & Structural Fixes --- */
+
+.modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.modal-content>.modal-body,
+.modal-content>div:not(.modal-header) {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.modal-header {
+  flex-shrink: 0;
+}

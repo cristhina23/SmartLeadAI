@@ -21,7 +21,7 @@ public class InteractionService
         return interaction;
     }
 
-    // READ: Gets all interactions (you might want to paginate this in the future)
+    // READ: Gets all interactions
     public async Task<List<Interaction>> GetAllInteractionsAsync()
     {
         return await _context.Interactions
@@ -84,4 +84,17 @@ public class InteractionService
         await _context.SaveChangesAsync();
         return true;
     }
+
+        // READ: Gets all pending interactions (follow-up date is in the future)
+    public async Task<List<Interaction>> GetPendingFollowUpsAsync()
+    {
+        return await _context.Interactions
+            .AsNoTracking()
+            .Include(i => i.Customer)
+            .Include(i => i.User)
+            .Where(i => i.NextFollowUp.HasValue && i.NextFollowUp > DateTime.UtcNow)
+            .OrderBy(i => i.NextFollowUp)
+            .ToListAsync();
+    }
+
 }

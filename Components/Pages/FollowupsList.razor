@@ -1,0 +1,115 @@
+@page "/followups"
+@using SmartLeadAI.Models
+@using SmartLeadAI.Services
+@inject InteractionService InteractionService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Pending Follow-Ups</PageTitle>
+
+<div class="page-header">
+    <h3>Pending Follow-Ups</h3>
+</div>
+
+@if (pendingFollowUps == null)
+{
+    <div class="loading-container">
+        <p><em>Loading follow-ups...</em></p>
+    </div>
+}
+else if (!pendingFollowUps.Any())
+{
+    <div class="text-center empty-state">
+        <p>There are no pending follow-ups at this time.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Follow-Up Date</th>
+                    <th>Customer Name</th>
+                    <th>Interaction Type</th>
+                    <th>Notes</th>
+                    <th>Original Date</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var interaction in pendingFollowUps)
+                {
+                    <tr>
+                        <td>
+                            <strong>@interaction.NextFollowUp?.ToString("MMM dd, yyyy - hh:mm tt")</strong>
+                        </td>
+                        <td>@interaction.Customer?.FullName</td>
+                        <td><span class="crm-badge crm-badge-info">@interaction.Type</span></td>
+                        <td>@interaction.Notes</td>
+                        <td>@interaction.InteractionDate.ToString("d")</td>
+                        <td class="text-center">
+                            <button class="crm-btn-secondary text-decoration-none" @onclick="() => ShowDetails(interaction.Id)" title="View Details">
+                                Details
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (isModalVisible && selectedInteraction != null)
+{
+    <div class="modal-backdrop" @onclick="CloseModal">
+        <div class="modal-content crm-card" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h2 class="modal-title">Interaction Details</h2>
+                <button class="btn-close" @onclick="CloseModal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Customer:</strong> @selectedInteraction.Customer?.FullName</p>
+                <p><strong>Type:</strong> <span class="crm-badge crm-badge-info">@selectedInteraction.Type</span></p>
+                <p><strong>Date:</strong> @selectedInteraction.InteractionDate.ToString("MMM dd, yyyy HH:mm")</p>
+                <p><strong>Next Follow-up:</strong> @(selectedInteraction.NextFollowUp?.ToString("MMM dd, yyyy hh:mm tt") ?? "None")</p>
+                <div style="margin-top: 1rem;">
+                    <strong>Notes:</strong>
+                    <div style="background-color: var(--clr-background); padding: 1rem; border-radius: 4px; border: 1px solid var(--clr-border); margin-top: 0.5rem; min-height: 80px;">
+                        @selectedInteraction.Notes
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="crm-btn-secondary" @onclick="CloseModal">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Interaction>? pendingFollowUps;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch the pending follow-ups from the database.
+        pendingFollowUps = await InteractionService.GetPendingFollowUpsAsync();
+    }
+
+    private Interaction? selectedInteraction;
+    private bool isModalVisible = false;
+
+    private void ShowDetails(int id)
+    {
+        selectedInteraction = pendingFollowUps?.FirstOrDefault(i => i.Id == id);
+        if (selectedInteraction != null)
+        {
+            isModalVisible = true;
+        }
+    }
+
+    private void CloseModal()
+    {
+        isModalVisible = false;
+        selectedInteraction = null;
+    }
+}

@@ -5,6 +5,7 @@
 @using Microsoft.EntityFrameworkCore
 @using SmartLeadAI.Services
 @inject GeminiService GeminiService
+@inject IJSRuntime JS
 
 
 <EditForm Model="@currentInteraction" OnValidSubmit="HandleValidSubmit" FormName="CreateInteractionForm">
@@ -78,6 +79,122 @@
 
 </div>
 
+<div class="ai-assistant-card">
+
+    <button type="button"
+        class="ai-assistant-header"
+        @onclick="ToggleAiAssistant">
+
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-stars"></i>
+            <span>AI Assistant</span>
+        </div>
+
+        <i class="bi @(showAiAssistant ? "bi-chevron-up" : "bi-chevron-down")"></i>
+
+    </button>
+
+    @if (showAiAssistant)
+    {
+        <div class="ai-assistant-body">
+
+            <div class="form-group mb-3">
+
+                <label class="form-label">AI Action</label>
+
+                <InputSelect @bind-Value="selectedAiAction"
+                             class="crm-input w-100">
+
+                    <option value="">Select Action...</option>
+
+                    <option value="summary">
+                        Generate Summary
+                    </option>
+
+                    <option value="response">
+                        Suggest Response
+                    </option>
+
+                </InputSelect>
+
+            </div>
+            @if (!string.IsNullOrWhiteSpace(selectedAiAction))
+            {
+                <div class="form-group mb-3">
+
+                    <label class="form-label">
+
+                        @(selectedAiAction == "summary"
+                            ? "Conversation / Notes"
+                            : "Customer Message")
+
+                    </label>
+
+                    <InputTextArea
+                        @bind-Value="aiInput"
+                        class="crm-input w-100"
+                        rows="6"
+                        placeholder="Paste your text here..." />
+
+                </div>
+
+                <button type="button"
+                    class="crm-btn-primary"
+                    @onclick="GenerateAiContent"
+                    disabled="@isGeneratingAi">
+
+                    @if (isGeneratingAi)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Generating...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-stars me-2"></i>
+                        <span>Generate</span>
+                    }
+
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(aiResult))
+                {
+                    <div class="form-group mt-4">
+
+                        <label class="form-label">AI Result</label>
+
+                        <textarea
+                            class="crm-input w-100"
+                            rows="8"
+                            readonly>@aiResult</textarea>
+
+                    </div>
+
+                    <button type="button"
+                        class="@(copied ? "btn btn-success" : "crm-btn-secondary")"
+                        @onclick="CopyResult">
+
+                    @if (copied)
+                    {
+                        <i class="bi bi-check-lg me-2"></i>
+                        <span>Copied</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-copy me-2"></i>
+                        <span>Copy Result</span>
+                    }
+
+                </button>
+                }
+            }
+
+
+
+        </div>
+    }
+
+</div>
+
     <div class="form-row mb-3" style="display:flex; gap:1rem;">
         <div class="form-group flex-1" style="flex:1;">
             <label class="form-label required-label">Interaction Date</label>
@@ -115,6 +232,44 @@
 
     private bool isImproving = false;
 
+    private bool showAiAssistant = false;
+
+    private string selectedAiAction = "";
+    private string aiInput = "";
+    private string aiResult = "";
+    private bool copied = false;
+    private bool isGeneratingAi = false;
+    
+
+
+    private async Task GenerateAiContent()
+    {
+        isGeneratingAi = true;
+
+        try
+        {
+            if (selectedAiAction == "summary")
+            {
+                aiResult =
+                    await GeminiService.GenerateSummaryAsync(aiInput);
+            }
+            else if (selectedAiAction == "response")
+            {
+                aiResult =
+                    await GeminiService.SuggestResponseAsync(aiInput);
+            }
+        }
+        finally
+        {
+            isGeneratingAi = false;
+        }
+    }
+
+    private void ToggleAiAssistant()
+    {
+        showAiAssistant = !showAiAssistant;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
@@ -141,6 +296,24 @@
         }
     }
 
+  
+
+    private async Task CopyResult()
+    {
+        await JS.InvokeVoidAsync(
+            "navigator.clipboard.writeText",
+            aiResult);
+
+        copied = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(3000);
+
+        copied = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
     private async Task ImproveNotes()
     {
         if (string.IsNullOrWhiteSpace(currentInteraction.Notes))
@@ -218,5 +391,44 @@
     .ai-btn:disabled{
         opacity:.75;
         cursor:not-allowed;
+    }
+
+    .ai-assistant-card{
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    overflow:hidden;
+    margin-bottom:1.5rem;
+    background:white;
+    }
+
+    .ai-assistant-header{
+        width:100%;
+        border:none;
+        background:transparent;
+        padding:1rem 1.25rem;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        cursor:pointer;
+        font-weight:600;
+    }
+
+    .ai-assistant-body{
+        padding:1.25rem;
+        border-top:1px solid #f1f5f9;
+    }
+
+    .ai-assistant-header:hover{
+        background:#f8fafc;
+    }
+    .copy-success{
+    background:#10b981;
+    color:white;
+    border:none;
+    }
+
+    .copy-success:hover{
+        background:#059669;
+        color:white;
     }
 </style>

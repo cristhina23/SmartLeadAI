@@ -54,9 +54,23 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<SmartLeadContext>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SmartLeadContext>();
 
-    db.Database.EnsureCreated();
+        Console.WriteLine("CREATING DATABASE...");
+
+        db.Database.EnsureCreated();
+
+        Console.WriteLine("DATABASE CREATED SUCCESSFULLY");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("DATABASE ERROR:");
+        Console.WriteLine(ex.ToString());
+
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.

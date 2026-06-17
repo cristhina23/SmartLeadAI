@@ -1,6 +1,7 @@
 # Build folders
 **/bin/
 **/obj/
+appsettings.Development.json
 
 # Local history
 .history/

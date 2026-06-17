@@ -3,6 +3,8 @@
 @using SmartLeadAI.Models
 @using SmartLeadAI.Data
 @using Microsoft.EntityFrameworkCore
+@using SmartLeadAI.Services
+@inject GeminiService GeminiService
 
 
 <EditForm Model="@currentInteraction" OnValidSubmit="HandleValidSubmit" FormName="CreateInteractionForm">
@@ -54,6 +56,28 @@
         <ValidationMessage For="() => currentInteraction.Notes" />
     </div>
 
+    <div class="mb-4">
+
+    <button type="button"
+        class="crm-btn-secondary ai-btn"
+        @onclick="ImproveNotes"
+        disabled="@isImproving">
+
+        @if (isImproving)
+        {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            <span>Improving Notes...</span>
+        }
+        else
+        {
+            <i class="bi bi-stars me-2"></i>
+            <span>Improve Notes</span>
+        }
+
+    </button>
+
+</div>
+
     <div class="form-row mb-3" style="display:flex; gap:1rem;">
         <div class="form-group flex-1" style="flex:1;">
             <label class="form-label required-label">Interaction Date</label>
@@ -89,6 +113,8 @@
     private List<Customer> customers = new();
     private List<User> users = new();
 
+    private bool isImproving = false;
+
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
@@ -112,6 +138,27 @@
             {
                 currentInteraction.UserId = users.First().Id;
             }
+        }
+    }
+
+    private async Task ImproveNotes()
+    {
+        if (string.IsNullOrWhiteSpace(currentInteraction.Notes))
+            return;
+
+        isImproving = true;
+
+        StateHasChanged();
+
+        try
+        {
+            currentInteraction.Notes =
+                await GeminiService.ImproveNotesAsync(currentInteraction.Notes);
+        }
+        finally
+        {
+            isImproving = false;
+            StateHasChanged();
         }
     }
 
@@ -156,3 +203,20 @@
         }
     }
 }
+
+<style>
+   .ai-btn{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    }
+
+    .ai-btn i{
+        font-size:1rem;
+    }
+
+    .ai-btn:disabled{
+        opacity:.75;
+        cursor:not-allowed;
+    }
+</style>

@@ -30,6 +30,13 @@ public int Id { get; set; }
     [Required (ErrorMessage = "IsActive is required.")]
     public bool IsActive { get; set; } = true;
 
+    public Guid? ActivationToken { get; set; }
+
+    [Required(ErrorMessage = "Creation date is required.")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ActivatedAt { get; set; }
+
     // Navigation Properties
     public Company? Company { get; set; } 
     public ICollection<Interaction>? Interactions { get; set; } = new List<Interaction>();

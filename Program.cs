@@ -1,4 +1,5 @@
 using SmartLeadAI.Components;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SmartLeadAI.Data;
+using SmartLeadAI.Models;
 using SmartLeadAI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -106,6 +108,76 @@ app.MapPost("/signin", async (
         : returnUrl;
 
     return Results.Redirect(redirectUrl);
+})
+.DisableAntiforgery();
+
+app.MapPost("/register", async (
+    [Microsoft.AspNetCore.Mvc.FromForm] CompanyRegistrationModel registration,
+    SmartLeadContext dbContext,
+    AuthService authService,
+    HttpContext httpContext) =>
+{
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(registration);
+
+    if (!Validator.TryValidateObject(registration, validationContext, validationResults, validateAllProperties: true))
+    {
+        var message = validationResults.FirstOrDefault()?.ErrorMessage ?? "Please check the registration form.";
+        return Results.Redirect($"/register?error={Uri.EscapeDataString(message)}");
+    }
+
+    var normalizedEmail = registration.AdminEmail.Trim().ToLower();
+    var emailExists = await dbContext.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+
+    if (emailExists)
+    {
+        return Results.Redirect("/register?error=An%20account%20with%20that%20email%20already%20exists.");
+    }
+
+    var now = DateTime.UtcNow;
+    var company = new Company
+    {
+        Name = registration.CompanyName.Trim(),
+        Email = registration.CompanyEmail.Trim(),
+        Phone = registration.CompanyPhone.Trim(),
+        CreatedAt = now
+    };
+
+    var admin = new User
+    {
+        FullName = registration.AdminName.Trim(),
+        Email = normalizedEmail,
+        Role = "Admin",
+        IsActive = true,
+        CreatedAt = now,
+        ActivatedAt = now
+    };
+
+    admin.PasswordHash = authService.HashPassword(admin, registration.AdminPassword);
+    company.Users.Add(admin);
+
+    dbContext.Companies.Add(company);
+    await dbContext.SaveChangesAsync();
+
+    var claims = new[] {
+        new Claim(ClaimTypes.Name, admin.Email),
+        new Claim(ClaimTypes.Email, admin.Email),
+        new Claim(ClaimTypes.Role, admin.Role)
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var principal = new ClaimsPrincipal(identity);
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        principal,
+        new AuthenticationProperties
+        {
+            IsPersistent = true,
+            AllowRefresh = true
+        });
+
+    return Results.Redirect("/dashboard");
 })
 .DisableAntiforgery();
 

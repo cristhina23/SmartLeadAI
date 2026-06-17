@@ -1,0 +1,109 @@
+.settings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 0;
+}
+
+.settings-header {
+    margin-bottom: 2rem;
+}
+
+.settings-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+/* Vertical Tab Nav Styling */
+.settings-sidebar {
+    flex: 0 0 250px;
+    padding: 1rem 0;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-divider {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--clr-text-secondary);
+    padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+    letter-spacing: 1px;
+}
+
+.nav-btn {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: var(--clr-text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-btn:hover {
+    background-color: var(--clr-background);
+    color: var(--clr-primary);
+}
+
+.nav-btn.active {
+    background-color: #f0f4f8;
+    /* Soft highlight */
+    color: var(--clr-primary);
+    border-left-color: var(--clr-primary);
+    font-weight: 600;
+}
+
+/* Content Area Styling */
+.settings-content {
+    flex: 1;
+    padding: 2rem;
+    min-height: 500px;
+}
+
+.tab-pane h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--clr-border);
+    margin: 1.5rem 0;
+}
+
+/* Simple fade-in animation for switching tabs smoothly */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustment for Mobile */
+@media (max-width: 768px) {
+    .settings-layout {
+        flex-direction: column;
+    }
+
+    .settings-sidebar {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}

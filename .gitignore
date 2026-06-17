@@ -23,3 +23,9 @@ appsettings.Development.json
 *.nuget.targets
 project.assets.json
 *.csproj.lscache
+
+# Ignore the .tmp folder and its entire contents
+.tmp/
+
+# Ignore all files starting with .merg (like .merge, .merge_file, etc.)
+.merg*

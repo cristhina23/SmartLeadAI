@@ -37,8 +37,53 @@
 
                     <div class="user-profile">
                         <div class="notification-wrapper">
-                            <i class="bi bi-bell notification-icon"></i>
-                            <span class="notification-badge">3</span>
+                            <div class="notification-trigger" @onclick="ToggleNotifications">
+                                <i class="bi bi-bell notification-icon"></i>
+                                @if (pendingFollowUps > 0)
+                                {
+                                    <span class="notification-badge">@pendingFollowUps</span>
+                                }
+                            </div>
+
+                            @if (isNotificationsOpen)
+                            {
+                                <div class="notification-backdrop" @onclick="CloseNotifications"></div>
+
+                                <div class="notification-dropdown crm-card fade-in" @onclick:stopPropagation="true">
+                                    <div class="dropdown-header">
+                                        <h6 class="mb-0 fw-bold">Notifications</h6>
+                                        @if (pendingFollowUps > 0)
+                                        {
+                                            <span class="badge bg-danger rounded-pill">@pendingFollowUps New</span>
+                                        }
+                                    </div>
+                                    
+                                    <div class="dropdown-body">
+                                        @if (pendingFollowUps == 0)
+                                        {
+                                            <div class="text-center p-3 text-secondary">
+                                                <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>
+                                                <small>You're all caught up!</small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="notification-item">
+                                                <div class="icon-circle bg-warning-light text-warning">
+                                                    <i class="bi bi-calendar-event"></i>
+                                                </div>
+                                                <div class="notification-text">
+                                                    <p class="mb-0 fw-bold">Follow-ups Due!</p>
+                                                    <small class="text-secondary">You have @pendingFollowUps interactions to follow up on today.</small>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="dropdown-footer text-center">
+                                        <a href="/interactions" class="text-primary text-decoration-none small" @onclick="CloseNotifications">View all interactions</a>
+                                    </div>
+                                </div>
+                            }
                         </div>
                         <img src="images/avatar.png" alt="Profile" class="avatar" />
                         <div class="user-info">
@@ -64,12 +109,18 @@
 
 @code {
     private bool isSidebarCollapsed = false;
+    private bool isNotificationsOpen = false;
+    private int pendingFollowUps = 0;
+    
     private string UserFullName { get; set; } = "User";
     private string CompanyName { get; set; } = "SmartLead Tenant";
 
-    private void ToggleSidebar() 
+    private void ToggleSidebar() => isSidebarCollapsed = !isSidebarCollapsed;
+    
+    private void ToggleNotifications() => isNotificationsOpen = !isNotificationsOpen;
+    private void CloseNotifications() 
     {
-        isSidebarCollapsed = !isSidebarCollapsed;
+        isNotificationsOpen = false;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -92,6 +143,13 @@
                     {
                         UserFullName = dbUser.FullName;
                         CompanyName = dbUser.Company?.Name ?? "SmartLead AI";
+
+                        var today = DateTime.UtcNow.Date;
+                        pendingFollowUps = await DbContext.Interactions
+                            .Where(i => i.UserId == dbUser.Id && 
+                                        i.NextFollowUp.HasValue && 
+                                        i.NextFollowUp.Value.Date <= today)
+                            .CountAsync();
                     }
                 }
                 catch

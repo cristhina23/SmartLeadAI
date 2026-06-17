@@ -96,6 +96,7 @@
 .notification-icon {
     font-size: 1.25rem;
     color: var(--clr-text-secondary, #64748B);
+    padding-left: 1rem;
 }
 
 .notification-badge {
@@ -113,6 +114,102 @@
     justify-content: center;
     border-radius: 50%;
     border: 2px solid var(--clr-surface, #FFFFFF);
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 150%;
+    right: -10px;
+    width: 320px;
+    background: var(--clr-surface, #FFFFFF);
+    border: 1px solid var(--clr-border, #E2E8F0);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
+    border-radius: var(--radius-md, 12px);
+    z-index: 2000;
+    overflow: hidden;
+    cursor: default;
+}
+
+.dropdown-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--clr-border, #E2E8F0);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--clr-background, #F8FAFC);
+}
+
+.dropdown-body {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    padding: 1rem;
+    gap: 1rem;
+    border-bottom: 1px solid var(--clr-border, #E2E8F0);
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: var(--clr-background, #F8FAFC);
+}
+
+.notification-trigger {
+    display: flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+}
+
+.notification-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1999;
+    cursor: default;
+    background: transparent;
+}
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.bg-warning-light {
+    background-color: #fef3c7;
+}
+
+.dropdown-footer {
+    padding: 0.75rem;
+    border-top: 1px solid var(--clr-border, #E2E8F0);
+    background-color: var(--clr-background, #F8FAFC);
+}
+
+.fade-in {
+    animation: dropFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dropFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .avatar {

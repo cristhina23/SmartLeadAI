@@ -1,6 +1,9 @@
 @page "/followups"
-@using SmartLeadAI.Models
-@using SmartLeadAI.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 @inject InteractionService InteractionService
 @inject NavigationManager NavigationManager
 
@@ -88,23 +91,30 @@ else
 
 @code {
     private List<Interaction>? pendingFollowUps;
+    private Interaction? selectedInteraction;
+    private bool isModalVisible = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch the pending follow-ups from the database.
-        pendingFollowUps = await InteractionService.GetPendingFollowUpsAsync();
-    }
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
 
-    private Interaction? selectedInteraction;
-    private bool isModalVisible = false;
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+            if (currentUser != null)
+            {
+                pendingFollowUps = await InteractionService.GetPendingFollowUpsAsync(currentUser.CompanyId);
+            }
+        }
+    }
 
     private void ShowDetails(int id)
     {
         selectedInteraction = pendingFollowUps?.FirstOrDefault(i => i.Id == id);
-        if (selectedInteraction != null)
-        {
-            isModalVisible = true;
-        }
+        if (selectedInteraction != null) isModalVisible = true;
     }
 
     private void CloseModal()

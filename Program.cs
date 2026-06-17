@@ -47,6 +47,7 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<InteractionService>();
+builder.Services.AddScoped<ExportService>();
 builder.Services.AddHttpClient<GeminiService>();
 
 var app = builder.Build();

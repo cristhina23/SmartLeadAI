@@ -4,9 +4,9 @@
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
-@using SmartLeadAI.Models
-@using SmartLeadAI.Data 
+@using Microsoft.AspNetCore.Components.Authorization
 
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IDbContextFactory<SmartLeadContext> DbFactory
 @inject NavigationManager NavigationManager
 
@@ -81,12 +81,24 @@
 
     private async Task ReloadEmployees()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        
-        employees = await context.Users
-            .AsNoTracking()
-            .OrderBy(u => u.FullName)
-            .ToListAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+            if (currentUser != null)
+            {
+                // SECURE QUERY: Filter by CompanyId
+                employees = await context.Users
+                    .AsNoTracking()
+                    .Where(u => u.CompanyId == currentUser.CompanyId)
+                    .OrderBy(u => u.FullName)
+                    .ToListAsync();
+            }
+        }
     }
 
     private void OpenEditModal(User employee)

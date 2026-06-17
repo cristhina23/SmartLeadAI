@@ -1,54 +1,76 @@
-@using Microsoft.AspNetCore.Components.Forms;
-@using SmartLeadAI.Models
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
+@inject CustomerService CustomerService
+@inject IDbContextFactory<SmartLeadContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
 
-<EditForm Model="@currentCustomer" OnValidSubmit="HandleValidSubmit" FormName="CreateCustomerForm">
+<EditForm Model="@currentCustomer" OnValidSubmit="HandleValidSubmit" FormName="CreateCustomerForm" class="crm-card p-4">
     <DataAnnotationsValidator/>
-    <ValidationSummary/>
+    <ValidationSummary class="text-danger mb-3" /> 
     
-    <div>
-        <label class="required-label">Full Name</label>
-        <InputText @bind-Value="currentCustomer.FullName" class="form-control" />
+    <h4 class="mb-3">New Customer Details</h4>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="currentCustomer.FullName" class="form-control" id="name" placeholder="Full Name" />
+        <label for="name">Full Name</label>
         <ValidationMessage For="() => currentCustomer.FullName" />
     </div>
 
-    <div>
-        <label class="required-label">Email</label>
-        <InputText @bind-Value="currentCustomer.Email" class="form-control" />
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="currentCustomer.Email" class="form-control" id="email" placeholder="name@example.com" />
+        <label for="email">Email Address</label>
         <ValidationMessage For="() => currentCustomer.Email" />
     </div>
 
-    <div class="required-label">
-        <label>Interest Type</label>
-        <InputText @bind-Value="currentCustomer.InterestType" class="form-control" />
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="currentCustomer.Phone" class="form-control" id="phone" placeholder="Phone" />
+        <label for="phone">Phone Number</label>
+        <ValidationMessage For="() => currentCustomer.Phone" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="currentCustomer.InterestType" class="form-control" id="interest" placeholder="Interest" />
+        <label for="interest">Interest Type</label>
         <ValidationMessage For="() => currentCustomer.InterestType" />
     </div>
 
-    <div>
-        <label>Notes</label>
-        <InputText @bind-Value="currentCustomer.Notes" class="form-control" />
+    <div class="form-floating mb-3">
+        <InputSelect @bind-Value="currentCustomer.Status" class="form-select" id="status">
+            <option value="Lead">Lead</option>
+            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
+        </InputSelect>
+        <label for="status">Status</label>
+        <ValidationMessage For="() => currentCustomer.Status" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputTextArea @bind-Value="currentCustomer.Notes" class="form-control" id="notes" placeholder="Notes" style="height: 100px" />
+        <label for="notes">Notes</label>
         <ValidationMessage For="() => currentCustomer.Notes" />
     </div>
 
-    
-
-    <div>
-        <label class="required-label">Company Id</label>
-        <InputNumber @bind-Value="currentCustomer.CompanyId" class="form-control" />
-        <ValidationMessage For="() => currentCustomer.CompanyId" />
-    </div>
-
-    
-
-    <button type="submit" class="btn btn-primary mt-3">Create Customer</button>
+    <button type="submit" class="crm-btn-primary w-100">Create Customer</button>
 </EditForm>
 
 @code {
-    private Customer currentCustomer = new Customer();
+    private Customer currentCustomer = new() { Status = "Lead" };
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
-        Console.WriteLine($"Saving data for: {currentCustomer.FullName}");
-        NavigationManager.NavigateTo("/");
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+        
+        using var context = await DbFactory.CreateDbContextAsync();
+        var currentUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+        if (currentUser != null)
+        {
+            currentCustomer.CompanyId = currentUser.CompanyId;
+            await CustomerService.AddAsync(currentCustomer);
+            NavigationManager.NavigateTo("/customers");
+        }
     }
 }

@@ -6,43 +6,57 @@ namespace SmartLeadAI.Services;
 
 public class CustomerService
 {
-    private readonly SmartLeadContext _context;
+    private readonly IDbContextFactory<SmartLeadContext> _contextFactory;
 
-    public CustomerService(SmartLeadContext context)
+    public CustomerService(IDbContextFactory<SmartLeadContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
-    public async Task<List<Customer>> GetAllAsync()
+    // READ: Only gets customers for a specific company
+    public async Task<List<Customer>> GetAllForCompanyAsync(int companyId)
     {
-        return await _context.Customers.ToListAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Customers
+            .AsNoTracking()
+            .Where(c => c.CompanyId == companyId)
+            .OrderBy(c => c.FullName)
+            .ToListAsync();
     }
 
+    // CREATE: Securely add a customer assigned to a specific company
     public async Task AddAsync(Customer customer)
     {
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
+        context.Customers.Add(customer);
+        await context.SaveChangesAsync();
     }
 
-    public async Task<Customer?> GetByIdAsync(int id)
+    // READ: Get by ID (ensuring we don't return data from other companies)
+    public async Task<Customer?> GetByIdAsync(int id, int companyId)
     {
-        return await _context.Customers.FindAsync(id);
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id && c.CompanyId == companyId);
     }
 
     public async Task UpdateAsync(Customer customer)
     {
-        _context.Customers.Update(customer);
-        await _context.SaveChangesAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
+        context.Customers.Update(customer);
+        await context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var customer = await _context.Customers.FindAsync(id);
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var customer = await context.Customers.FindAsync(id);
 
         if (customer != null)
         {
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
+            context.Customers.Remove(customer);
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -1,6 +1,9 @@
 @page "/interactions"
-@using SmartLeadAI.Models
-@using SmartLeadAI.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 @inject InteractionService InteractionService
 @inject NavigationManager NavigationManager
 @attribute [Authorize]
@@ -86,8 +89,20 @@
 
     private async Task LoadInteractions()
     {
-        // Fetches the list using the service we created earlier
-        interactions = await InteractionService.GetAllInteractionsAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+            if (currentUser != null)
+            {
+                // Pass the company ID to the service
+                interactions = await InteractionService.GetAllInteractionsAsync(currentUser.CompanyId);
+            }
+        }
     }
 
     private void ShowDetails(int id)

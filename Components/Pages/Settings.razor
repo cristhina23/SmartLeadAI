@@ -1,14 +1,20 @@
 @page "/settings"
-@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDbContextFactory<SmartLeadContext> DbFactory
+@inject ExportService ExportService
+@inject IJSRuntime JS
 
 <PageTitle>Settings - Smart Lead AI</PageTitle>
 
 <div class="settings-container">
     <div class="settings-header">
         <h1>Settings</h1>
-        <p class="text-secondary">Manage your personal preferences and workspace configurations.</p>
+        <p class="subtitle">Manage your personal preferences and workspace configurations.</p>
     </div>
 
     <div class="settings-layout">
@@ -16,12 +22,7 @@
             <ul class="nav-list">
                 <li>
                     <button class="nav-btn @(activeTab == "profile" ? "active" : "")" @onclick="@(() => SetActiveTab("profile"))">
-                        <i class="icon-user"></i> My Profile
-                    </button>
-                </li>
-                <li>
-                    <button class="nav-btn @(activeTab == "preferences" ? "active" : "")" @onclick="@(() => SetActiveTab("preferences"))">
-                        <i class="icon-sliders"></i> Preferences
+                        <i class="bi bi-person"></i> My Profile
                     </button>
                 </li>
                 
@@ -30,7 +31,7 @@
                         <li class="nav-divider">Workspace (Admin)</li>
                         <li>
                             <button class="nav-btn @(activeTab == "company" ? "active" : "")" @onclick="@(() => SetActiveTab("company"))">
-                                <i class="icon-briefcase"></i> Company Details
+                                <i class="bi bi-briefcase"></i> Company Details
                             </button>
                         </li>
                     </Authorized>
@@ -39,7 +40,6 @@
         </nav>
 
         <main class="settings-content crm-card">
-            
             @if (activeTab == "profile")
             {
                 <div class="tab-pane fade-in">
@@ -47,39 +47,17 @@
                     <hr />
                     <div class="form-group mb-3">
                         <label class="required-label">Full Name</label>
-                        <input type="text" class="form-control form-floating" placeholder="Your Name" />
+                        <input type="text" class="form-control" placeholder="Your Name" @bind="currentUser.FullName" />
                     </div>
                     <div class="form-group mb-3">
                         <label class="required-label">Email Address</label>
-                        <input type="email" class="form-control form-floating" placeholder="name@company.com" disabled />
+                        <input type="email" class="form-control" value="@currentUser.Email" disabled />
                         <small class="text-secondary">Contact an administrator to change your email address.</small>
                     </div>
-                    <button class="btn btn-primary mt-2">Update Profile</button>
+                    <button class="crm-btn-primary mt-2" @onclick="UpdateProfile">Update Profile</button>
                     
                     <h3 class="mt-5">Security</h3>
-                    <hr />
                     <button class="btn btn-outline-danger">Change Password</button>
-                </div>
-            }
-
-            @if (activeTab == "preferences")
-            {
-                <div class="tab-pane fade-in">
-                    <h2>Application Preferences</h2>
-                    <hr />
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                        <label class="form-check-label" for="emailNotifications">Enable Daily Follow-up Reminder Emails</label>
-                    </div>
-                    <div class="form-group mb-3 mt-4">
-                        <label>Default Table View Size</label>
-                        <select class="form-control form-floating" style="max-width: 200px;">
-                            <option value="10">10 items per page</option>
-                            <option value="25">25 items per page</option>
-                            <option value="50">50 items per page</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary mt-2">Save Preferences</button>
                 </div>
             }
 
@@ -90,31 +68,80 @@
                     <hr />
                     <div class="form-group mb-3">
                         <label class="required-label">Company Name</label>
-                        <input type="text" class="form-control form-floating" placeholder="Company Name" />
+                        <input type="text" class="form-control" @bind="currentCompany.Name" />
                     </div>
                     <div class="form-group mb-3">
                         <label>Support Phone</label>
-                        <input type="text" class="form-control form-floating" placeholder="(555) 000-0000" />
+                        <input type="text" class="form-control" placeholder="(555) 000-0000" @bind="currentCompany.Phone" />
                     </div>
-                    <button class="btn btn-primary mt-2">Save Company</button>
+                    <button class="crm-btn-primary mt-2" @onclick="SaveCompany">Save Company</button>
 
                     <h3 class="mt-5">Data Management</h3>
-                    <hr />
-                    <button class="btn btn-outline-primary me-2">Export Customers (CSV)</button>
-                    <button class="btn btn-outline-secondary">Export Interactions</button>
+                    <div class="d-flex gap-2">
+                        <button class="crm-btn-secondary flex-fill" @onclick="ExportCustomers">Export Customers (CSV)</button>
+                        <button class="crm-btn-secondary flex-fill" @onclick="ExportInteractions">Export Interactions (CSV)</button>
+                    </div>
                 </div>
             }
-
         </main>
     </div>
 </div>
 
 @code {
-    // Default active tab
     private string activeTab = "profile";
+    private User currentUser = new();
+    private Company currentCompany = new();
 
-    private void SetActiveTab(string tabName)
+    protected override async Task OnInitializedAsync()
     {
-        activeTab = tabName;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            currentUser = await context.Users
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower()) ?? new();
+            
+            currentCompany = currentUser.Company ?? new();
+        }
+    }
+
+    private void SetActiveTab(string tabName) => activeTab = tabName;
+
+    private async Task UpdateProfile()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        context.Users.Update(currentUser);
+        await context.SaveChangesAsync();
+        await JS.InvokeVoidAsync("alert", "Profile updated successfully!");
+    }
+
+    private async Task SaveCompany()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        context.Companies.Update(currentCompany);
+        await context.SaveChangesAsync();
+        await JS.InvokeVoidAsync("alert", "Company details saved!");
+    }
+
+    private async Task ExportCustomers()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        var data = await context.Customers.Where(c => c.CompanyId == currentUser.CompanyId).ToListAsync();
+        var csv = ExportService.GenerateCustomerCsv(data);
+        await JS.InvokeVoidAsync("downloadFile", $"Customers_{DateTime.Now:yyyyMMdd}.csv", csv);
+    }
+
+    private async Task ExportInteractions()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        var data = await context.Interactions
+            .Include(i => i.Customer)
+            .Where(i => i.Customer.CompanyId == currentUser.CompanyId)
+            .ToListAsync();
+        var csv = ExportService.GenerateInteractionsCsv(data);
+        await JS.InvokeVoidAsync("downloadFile", $"Interactions_{DateTime.Now:yyyyMMdd}.csv", csv);
     }
 }

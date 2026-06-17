@@ -2,10 +2,11 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
-@using SmartLeadAI.Models
-@using SmartLeadAI.Data
 @using Microsoft.EntityFrameworkCore
-@inject SmartLeadContext DbContext
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDbContextFactory<SmartLeadContext> DbFactory
 
 <PageTitle>Dashboard - Smart Lead AI</PageTitle>
 
@@ -211,108 +212,100 @@
     {
         try
         {
-            totalCustomersCount = await DbContext.Companies.AnyAsync() ? await DbContext.Customers.CountAsync() : 0;
-            recentInteractionsCount = await DbContext.Companies.AnyAsync() ? await DbContext.Interactions.CountAsync() : 0;
-            
-            activeFollowUpsCount = await DbContext.Companies.AnyAsync() 
-                ? await DbContext.Interactions.Where(i => i.NextFollowUp != null && i.NextFollowUp >= DateTime.Now).CountAsync() 
-                : 0;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var email = authState.User.Identity?.Name;
 
-            if (totalCustomersCount > 0 || recentInteractionsCount > 0)
+            if (!string.IsNullOrEmpty(email))
             {
-                realActivities = await DbContext.Interactions
-                    .Include(i => i.Customer)
-                    .OrderByDescending(i => i.InteractionDate)
-                    .Take(5)
-                    .Select(i => new RecentActivityDto
-                    {
-                        CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
-                        Type = i.Type,
-                        Summary = i.Notes ?? "No summary notes provided.",
-                        Date = i.InteractionDate
-                    })
-                    .ToListAsync();
+                // Create a fresh context instance from the factory
+                using var context = await DbFactory.CreateDbContextAsync();
+                
+                var currentUser = await context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
-                realFollowUps = await DbContext.Interactions
-                    .Include(i => i.Customer)
-                    .Where(i => i.NextFollowUp != null && i.NextFollowUp >= DateTime.Now)
-                    .OrderBy(i => i.NextFollowUp)
-                    .Take(5)
-                    .Select(i => new UpcomingFollowUpDto
-                    {
-                        CustomerId = i.CustomerId,
-                        CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
-                        TargetDate = i.NextFollowUp ?? DateTime.Now,
-                        Channel = i.Type
-                    })
-                    .ToListAsync();
-            }
-            else
-            {
-                // Fall back straight to development placeholder objects if database records are empty
-                SeedDevMockPlaceholders();
+                if (currentUser != null)
+                {
+                    var companyId = currentUser.CompanyId;
+
+                    // Securely filter all dashboard metrics by the user's CompanyId
+                    totalCustomersCount = await context.Customers
+                        .CountAsync(c => c.CompanyId == companyId);
+                    
+                    recentInteractionsCount = await context.Interactions
+                        .CountAsync(i => i.Customer.CompanyId == companyId);
+                    
+                    activeFollowUpsCount = await context.Interactions
+                        .Where(i => i.Customer.CompanyId == companyId && 
+                                    i.NextFollowUp != null && 
+                                    i.NextFollowUp >= DateTime.Now)
+                        .CountAsync();
+
+                    // Fetch real activity data
+                    realActivities = await context.Interactions
+                        .Include(i => i.Customer)
+                        .Where(i => i.Customer.CompanyId == companyId)
+                        .OrderByDescending(i => i.InteractionDate)
+                        .Take(5)
+                        .Select(i => new RecentActivityDto
+                        {
+                            CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
+                            Type = i.Type,
+                            Summary = i.Notes ?? "No summary notes provided.",
+                            Date = i.InteractionDate
+                        })
+                        .ToListAsync();
+
+                    // Fetch upcoming follow-ups
+                    realFollowUps = await context.Interactions
+                        .Include(i => i.Customer)
+                        .Where(i => i.Customer.CompanyId == companyId && 
+                                    i.NextFollowUp != null && 
+                                    i.NextFollowUp >= DateTime.Now)
+                        .OrderBy(i => i.NextFollowUp)
+                        .Take(5)
+                        .Select(i => new UpcomingFollowUpDto
+                        {
+                            CustomerId = i.CustomerId,
+                            CustomerName = i.Customer != null ? i.Customer.FullName : "Unknown Customer",
+                            TargetDate = i.NextFollowUp ?? DateTime.Now,
+                            Channel = i.Type
+                        })
+                        .ToListAsync();
+                }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Dashboard database tracking fault caught: {ex.Message}");
-            SeedDevMockPlaceholders();
+            // Lists remain empty (null/empty state handled in UI)
         }
     }
 
-    private void SeedDevMockPlaceholders()
+    // Helper methods for UI icons/styling
+    private string GetActivityTypeColor(string type) => type.ToLower() switch
     {
-        totalCustomersCount = 124;
-        activeFollowUpsCount = 12;
-        recentInteractionsCount = 45;
+        "call" or "phone" => "icon-primary",
+        "email" => "icon-info",
+        "whatsapp" => "icon-success",
+        _ => "icon-secondary"
+    };
 
-        realActivities = new List<RecentActivityDto>
-        {
-            new RecentActivityDto { CustomerName = "Blu Berry", Type = "Call", Summary = "Discussed downtown 3-bed condos.", Date = DateTime.Now.AddMinutes(-45) },
-            new RecentActivityDto { CustomerName = "John Doe", Type = "Email", Summary = "Sent introduction quote schema.", Date = DateTime.Now.AddHours(-3) },
-            new RecentActivityDto { CustomerName = "Elena Rostova", Type = "WhatsApp", Summary = "Confirmed viewing schedules.", Date = DateTime.Now.AddHours(-5) }
-        };
-
-        realFollowUps = new List<UpcomingFollowUpDto>
-        {
-            new UpcomingFollowUpDto { CustomerId = 1, CustomerName = "John Doe", TargetDate = DateTime.Now.AddDays(1), Channel = "WhatsApp" },
-            new UpcomingFollowUpDto { CustomerId = 3, CustomerName = "Elena Rostova", TargetDate = DateTime.Now.AddDays(2), Channel = "Phone" },
-            new UpcomingFollowUpDto { CustomerId = 1, CustomerName = "Sarah Jenkins", TargetDate = DateTime.Now.AddDays(4), Channel = "Email" }
-        };
-    }
-
-    private string GetActivityTypeColor(string type)
+    private string GetActivityIconClass(string type) => type.ToLower() switch
     {
-        return type.ToLower() switch
-        {
-            "call" or "phone" => "icon-primary",
-            "email" => "icon-info",
-            "whatsapp" => "icon-success",
-            _ => "icon-secondary"
-        };
-    }
+        "call" or "phone" => "bi-telephone-outbound-fill",
+        "email" => "bi-envelope-paper-fill",
+        "whatsapp" => "bi-whatsapp",
+        _ => "bi-chat-left-text-fill"
+    };
 
-    private string GetActivityIconClass(string type)
+    private string GetChannelIconClass(string channel) => channel.ToLower() switch
     {
-        return type.ToLower() switch
-        {
-            "call" or "phone" => "bi-telephone-outbound-fill",
-            "email" => "bi-envelope-paper-fill",
-            "whatsapp" => "bi-whatsapp",
-            _ => "bi-chat-left-text-fill"
-        };
-    }
-
-    private string GetChannelIconClass(string channel)
-    {
-        return channel.ToLower() switch
-        {
-            "phone" or "call" => "bi-telephone",
-            "email" => "bi-envelope",
-            "whatsapp" => "bi-whatsapp",
-            _ => "bi-chat"
-        };
-    }
+        "phone" or "call" => "bi-telephone",
+        "email" => "bi-envelope",
+        "whatsapp" => "bi-whatsapp",
+        _ => "bi-chat"
+    };
 
     private class RecentActivityDto
     {

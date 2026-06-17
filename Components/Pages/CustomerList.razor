@@ -5,7 +5,9 @@
 @using SmartLeadAI.Models
 @using SmartLeadAI.Data
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
 
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IDbContextFactory<SmartLeadContext> DbFactory
 
 <PageTitle>Customers - Smart Lead AI</PageTitle>
@@ -89,12 +91,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        
-        customers = await context.Customers
-            .AsNoTracking()
-            .OrderBy(c => c.FullName)
-            .ToListAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+            if (currentUser != null)
+            {
+                customers = await context.Customers
+                    .AsNoTracking()
+                    .Where(c => c.CompanyId == currentUser.CompanyId)
+                    .OrderBy(c => c.FullName)
+                    .ToListAsync();
+            }
+        }
     }
 
     private string GetStatusBadgeClass(string? status)

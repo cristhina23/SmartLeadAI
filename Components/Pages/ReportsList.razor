@@ -1,82 +1,121 @@
 @page "/reports"
+@attribute [Authorize]
+@rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @using SmartLeadAI.Data
 
-@inject SmartLeadContext DbContext
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDbContextFactory<SmartLeadContext> DbFactory
+@inject IJSRuntime JS
+@inject ExportService ExportService
 
-<PageTitle>Reports</PageTitle>
+<PageTitle>Reports - Smart Lead AI</PageTitle>
 
-<h1 class="reports-title">Reports</h1>
+<div class="page-header mt-4 mb-4 d-flex justify-content-between align-items-center">
+    <h1 class="reports-title">Reports</h1>
+    <button class="crm-btn-primary" @onclick="ExportReportData">
+        <i class="bi bi-download me-2"></i> Export Report
+    </button>
+</div>
 
 <div class="reports-container">
-
-
-<div class="report-card customers-card">
-    <div class="report-icon">
-        <i class="bi bi-people-fill"></i>
+    @* Stat cards stay the same, but now they will show company-specific data *@
+    <div class="report-card customers-card">
+        <div class="report-icon"><i class="bi bi-people-fill"></i></div>
+        <div>
+            <p class="report-label">Total Customers</p>
+            <h2>@totalCustomers</h2>
+        </div>
     </div>
 
-    <div>
-        <p class="report-label">Total Customers</p>
-        <h2>@totalCustomers</h2>
-    </div>
-</div>
-
-<div class="report-card employees-card">
-    <div class="report-icon">
-        <i class="bi bi-person-badge-fill"></i>
-    </div>
-
-    <div>
-        <p class="report-label">Total Employees</p>
-        <h2>@totalEmployees</h2>
-    </div>
-</div>
-
-<div class="report-card interactions-card">
-    <div class="report-icon">
-        <i class="bi bi-chat-left-text-fill"></i>
+    <div class="report-card employees-card">
+        <div class="report-icon">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+            <p class="report-label">Total Employees</p>
+            <h2>@totalEmployees</h2>
+        </div>
     </div>
 
-    <div>
-        <p class="report-label">Total Interactions</p>
-        <h2>@totalInteractions</h2>
+    <div class="report-card interactions-card">
+        <div class="report-icon">
+            <i class="bi bi-chat-left-text-fill"></i>
+        </div>
+
+        <div>
+            <p class="report-label">Total Interactions</p>
+            <h2>@totalInteractions</h2>
+        </div>
     </div>
-</div>
 
-<div class="report-card followups-card">
-    <div class="report-icon">
-        <i class="bi bi-calendar-check-fill"></i>
+    <div class="report-card followups-card">
+        <div class="report-icon">
+            <i class="bi bi-calendar-check-fill"></i>
+        </div>
+
+        <div>
+            <p class="report-label">Scheduled Follow-Ups</p>
+            <h2>@totalFollowUps</h2>
+        </div>
     </div>
-
-    <div>
-        <p class="report-label">Scheduled Follow-Ups</p>
-        <h2>@totalFollowUps</h2>
-    </div>
-</div>
-
-
 </div>
 
 @code {
+    private int totalCustomers;
+    private int totalEmployees;
+    private int totalInteractions;
+    private int totalFollowUps;
 
-private int totalCustomers;
-private int totalEmployees;
-private int totalInteractions;
-private int totalFollowUps;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
 
-protected override async Task OnInitializedAsync()
-{
-    totalCustomers = await DbContext.Customers.CountAsync();
-    totalEmployees = await DbContext.Users.CountAsync();
-    totalInteractions = await DbContext.Interactions.CountAsync();
+        if (!string.IsNullOrEmpty(email))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
-    totalFollowUps = await DbContext.Interactions
-        .CountAsync(i => i.NextFollowUp != null);
-}
+            if (currentUser != null)
+            {
+                var companyId = currentUser.CompanyId;
 
+                // SECURE QUERIES: Filter all counts by CompanyId
+                totalCustomers = await context.Customers.CountAsync(c => c.CompanyId == companyId);
+                totalEmployees = await context.Users.CountAsync(u => u.CompanyId == companyId);
+                
+                // Interactions don't have CompanyId, so we filter through the customer link
+                totalInteractions = await context.Interactions.CountAsync(i => i.Customer.CompanyId == companyId);
+                totalFollowUps = await context.Interactions.CountAsync(i => i.Customer.CompanyId == companyId && i.NextFollowUp != null);
+            }
+        }
+    }
 
+    private async Task ExportReportData()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name;
+        var currentUser = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+        if (currentUser != null)
+        {
+            // 1. Fetch data
+            var data = await context.Customers
+                .Where(c => c.CompanyId == currentUser.CompanyId)
+                .ToListAsync();
+
+            // 2. Generate CSV
+            var csvContent = ExportService.GenerateCustomerCsv(data);
+
+            // 3. Trigger download via JS
+            var fileName = $"Customers_Report_{DateTime.Now:yyyyMMdd}.csv";
+            await JS.InvokeVoidAsync("downloadFile", fileName, csvContent);
+        }
+    }
 }
 
 <style>

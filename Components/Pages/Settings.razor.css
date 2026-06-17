@@ -14,6 +14,10 @@
     align-items: flex-start;
 }
 
+.subtitle {
+    color: var(--clr-text-secondary);
+}
+
 /* Vertical Tab Nav Styling */
 .settings-sidebar {
     flex: 0 0 250px;
@@ -61,6 +65,27 @@
     font-weight: 600;
 }
 
+.d-flex.gap-2 {
+    gap: 1rem !important;
+    flex-wrap: wrap;
+}
+
+.crm-btn-secondary {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    border: 2px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    background-color: var(--clr-surface);
+    transition: all 0.2s ease;
+}
+
+.crm-btn-secondary:hover {
+    background-color: var(--clr-background);
+    border-color: var(--clr-primary);
+}
+
 /* Content Area Styling */
 .settings-content {
     flex: 1;
@@ -71,12 +96,6 @@
 .tab-pane h2 {
     margin-top: 0;
     font-size: 1.5rem;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid var(--clr-border);
-    margin: 1.5rem 0;
 }
 
 /* Simple fade-in animation for switching tabs smoothly */

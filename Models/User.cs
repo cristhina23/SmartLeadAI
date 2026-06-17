@@ -20,8 +20,6 @@ public int Id { get; set; }
     [EmailAddress (ErrorMessage = "Invalid email format.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required (ErrorMessage = "Password is required.")]
-    [StringLength(255, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 255 characters.")]
     public string PasswordHash { get; set; } = string.Empty; 
 
     [Required (ErrorMessage = "Role is required.")]

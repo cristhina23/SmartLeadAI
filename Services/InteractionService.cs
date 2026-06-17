@@ -6,46 +6,47 @@ namespace SmartLeadAI.Services;
 
 public class InteractionService
 {
-    private readonly SmartLeadContext _context;
+    private readonly IDbContextFactory<SmartLeadContext> _contextFactory;
 
-    public InteractionService(SmartLeadContext context)
+    public InteractionService(IDbContextFactory<SmartLeadContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
-    // CREATE: Adds a new interaction to the database
     public async Task<Interaction> CreateInteractionAsync(Interaction interaction)
     {
-        _context.Interactions.Add(interaction);
-        await _context.SaveChangesAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
+        context.Interactions.Add(interaction);
+        await context.SaveChangesAsync();
         return interaction;
     }
 
-    // READ: Gets all interactions
-    public async Task<List<Interaction>> GetAllInteractionsAsync()
+    public async Task<List<Interaction>> GetAllInteractionsAsync(int companyId)
     {
-        return await _context.Interactions
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Interactions
             .AsNoTracking()
-            .Include(i => i.Customer) // Include related Customer data
-            .Include(i => i.User)     // Include related User data
+            .Include(i => i.Customer)
+            .Include(i => i.User)
+            .Where(i => i.Customer.CompanyId == companyId)
             .OrderByDescending(i => i.InteractionDate)
             .ToListAsync();
     }
 
-    // READ: Gets a specific interaction by its ID
     public async Task<Interaction?> GetInteractionByIdAsync(int id)
     {
-        return await _context.Interactions
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Interactions
             .AsNoTracking()
             .Include(i => i.Customer)
             .Include(i => i.User)
             .FirstOrDefaultAsync(i => i.Id == id);
     }
 
-    // READ: Gets all interactions for a specific customer
     public async Task<List<Interaction>> GetInteractionsByCustomerIdAsync(int customerId)
     {
-        return await _context.Interactions
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Interactions
             .AsNoTracking()
             .Include(i => i.User)
             .Where(i => i.CustomerId == customerId)
@@ -53,46 +54,43 @@ public class InteractionService
             .ToListAsync();
     }
 
-    // UPDATE: Updates an existing interaction
     public async Task<bool> UpdateInteractionAsync(Interaction updatedInteraction)
     {
-        var existingInteraction = await _context.Interactions.FindAsync(updatedInteraction.Id);
-        
-        if (existingInteraction == null)
-            return false;
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var existing = await context.Interactions.FindAsync(updatedInteraction.Id);
+        if (existing == null) return false;
 
-        // Update properties
-        existingInteraction.Type = updatedInteraction.Type;
-        existingInteraction.Notes = updatedInteraction.Notes;
-        existingInteraction.InteractionDate = updatedInteraction.InteractionDate;
-        existingInteraction.NextFollowUp = updatedInteraction.NextFollowUp;
+        existing.Type = updatedInteraction.Type;
+        existing.Notes = updatedInteraction.Notes;
+        existing.InteractionDate = updatedInteraction.InteractionDate;
+        existing.NextFollowUp = updatedInteraction.NextFollowUp;
         
-        // Save changes
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return true;
     }
 
-    // DELETE: Removes an interaction from the database
     public async Task<bool> DeleteInteractionAsync(int id)
     {
-        var interaction = await _context.Interactions.FindAsync(id);
-        
-        if (interaction == null)
-            return false;
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var interaction = await context.Interactions.FindAsync(id);
+        if (interaction == null) return false;
 
-        _context.Interactions.Remove(interaction);
-        await _context.SaveChangesAsync();
+        context.Interactions.Remove(interaction);
+        await context.SaveChangesAsync();
         return true;
     }
 
-    // READ: Gets all pending interactions (follow-up date is in the future)
-    public async Task<List<Interaction>> GetPendingFollowUpsAsync()
+    public async Task<List<Interaction>> GetPendingFollowUpsAsync(int companyId)
     {
-        return await _context.Interactions
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var today = DateTime.UtcNow.Date;
+        return await context.Interactions
             .AsNoTracking()
             .Include(i => i.Customer)
             .Include(i => i.User)
-            .Where(i => i.NextFollowUp.HasValue && i.NextFollowUp > DateTime.UtcNow)
+            .Where(i => i.Customer.CompanyId == companyId && 
+                        i.NextFollowUp.HasValue && 
+                        i.NextFollowUp.Value.Date >= today)
             .OrderBy(i => i.NextFollowUp)
             .ToListAsync();
     }

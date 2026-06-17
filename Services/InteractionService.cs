@@ -85,7 +85,7 @@ public class InteractionService
         return true;
     }
 
-        // READ: Gets all pending interactions (follow-up date is in the future)
+    // READ: Gets all pending interactions (follow-up date is in the future)
     public async Task<List<Interaction>> GetPendingFollowUpsAsync()
     {
         return await _context.Interactions
@@ -96,5 +96,4 @@ public class InteractionService
             .OrderBy(i => i.NextFollowUp)
             .ToListAsync();
     }
-
 }
